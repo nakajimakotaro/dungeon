@@ -7,7 +7,7 @@ function range(range: number) {
     return new Array(range).fill(0).map((e, i) => i);
 }
 function roundGridSize(value: number, gridSize: number): number {
-    return value - value % gridSize;
+    return Math.round(value - value % gridSize);
 }
 
 class Point{
@@ -50,18 +50,20 @@ class Room {
     draw(render:PIXI.Graphics){
         render
             .beginFill(0xa0a0a0)
-            .drawRect(this.posX - this.width / 2, this.posY / 2, this.width, this.height);
+            .drawRect(this.posX - this.width / 2, this.posY - this.height / 2, this.width, this.height);
+        console.log(this.posY);
+        console.log(this.height);
     }
 }
 
 function createRoomList(maxWidth: number, maxHeight: number, maxrangeX: number, maxrangeY: number, gridSize: number = 4, pos: number = 10) {
     let list: Room[] = [];
     for (let count of range(pos)) {
-        let width  = roundGridSize(rangeRandom(0, maxWidth),  gridSize);
-        let height = roundGridSize(rangeRandom(0, maxHeight), gridSize);
+        let width  = roundGridSize(rangeRandom(20, maxWidth),  gridSize);
+        let height = roundGridSize(rangeRandom(20, maxHeight), gridSize);
         list.push(new Room(
-            roundGridSize(maxrangeX, gridSize) - width  / 2,
-            roundGridSize(maxrangeY, gridSize) - height / 2,
+            roundGridSize(rangeRandom(20, maxrangeX), gridSize) - width  / 2,
+            roundGridSize(rangeRandom(20, maxrangeY), gridSize) - height / 2,
             width,
             height,
         ));
@@ -73,8 +75,9 @@ function delaunayTriangulation(roomList:Room[]){
     }
 }
 
+console.log(roundGridSize(rangeRandom(0, 600), 4));
 let pixi = new PIXI.Application(600, 600);
-document.appendChild(pixi.view);
+document.body.appendChild(pixi.view);
 let render = new PIXI.Graphics();
 pixi.stage.addChild(render);
 

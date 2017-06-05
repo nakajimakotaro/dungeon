@@ -10,7 +10,8 @@ module.exports = {
     devtool: 'source-map',
     devServer: {
         contentBase: 'public/',
-        inline: true
+        inline: true,
+        disableHostCheck: true
     },
     resolve: {
         extensions: ['.ts', '.js']
