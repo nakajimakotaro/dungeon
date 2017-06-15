@@ -14,7 +14,7 @@ function roundGridSize(value: number, gridSize: number): number {
 }
 
 class Edge<T>{
-    parentTree: Tree<Edge<T>> | null;
+    parentTree: Edge<T> | null;
     constructor(public pair1: T, public pair2: T, public range: number) {
     }
 }
@@ -27,7 +27,6 @@ export class RoomPair extends Edge<Room> {
 export class MysteryDungeon {
     roomList: Room[];
     roomGraph: RoomPair[];
-    roomTree: Tree<RoomPair>;
     constructor() {
         this.roomList = RoomOperator.createRoomList(40, 40, 600, 600, 4, 4);
         this.roomGraph = RoomOperator.connectRoom(this.roomList);
@@ -144,55 +143,56 @@ class RoomOperator {
     }
 
 }
-export class Tree<T>{
-    node: T;
-    parent: Tree<T> | null;
-    childList: Tree<T>[] = [];
-    constructor(node: T) {
-        this.node = node;
-    }
-}
 class MinimumSpanningTree {
-    static create(edgeList: RoomPair[]): Tree<RoomPair> {
-        const sortedEdgeTreeList = edgeList
-            .slice()
-            .sort((a, b) => {
-                return a.range - b.range;
-            })
-            .map(e => {
-                const tree = new Tree<RoomPair>(e);
-                e.parentTree = tree;
-                return tree;
-            });
-
-        for (let edgeTree of sortedEdgeTreeList) {
-            for (let connectEdge of edgeTree.node.pair1.connectEdgeList) {
-                if (!UnionFind.same(edgeTree, connectEdge.parentTree!)) {
-                    UnionFind.unite(edgeTree, connectEdge.parentTree!);
-                }
+    static create(edgeList: RoomPair[]): RoomPair[] {
+        const sortedEdgeList = edgeList.slice().sort((a, b) => a.range - b.range);
+        const edgeDisjointSet:{[key: Room]: DisjointSet<Room>}= {};
+        const edgeDisjointSet:{[key: Room]: DisjointSet<Room>}= {};
+        for(let edge of edgeList){
+            edgeDisjointSet[edge.pair1]
+        }
+        for (let edge of sortedEdgeList) {
+            if (!edgeList[edge.pair1].same(edgeList[edge.node2])) {
+                this.tree.push(edge);
+                edgeList[edge.pair1].uniton(edgeList[edge.node2]);
+                console.log(edgeList);
             }
         }
-        return UnionFind.getTop(sortedEdgeTreeList[0]);
+        return;
     }
 }
-class UnionFind {
-    static getTop<T>(tree: Tree<T>): Tree<T> {
-        if (tree.parent == null) {
-            return tree;
-        }
-        return UnionFind.getTop(tree.parent);
+class DisjointSet<T> {
+    node: T;
+    childList: DisjointSet<T>[] = [];
+    parent: DisjointSet<T> | null = null;
+
+    addChild(child: DisjointSet<T>) {
+        this.childList.push(child);
+        child.parent = this;
     }
-    static same<T>(tree1: Tree<T>, tree2: Tree<T>): boolean {
-        return UnionFind.getTop(tree1) == UnionFind.getTop(tree2);
+
+    constructor(node: T, parent: DisjointSet<T> | null = null) {
+        this.node = node;
+        this.parent = parent;
     }
-    static unite<T>(tree1: Tree<T>, tree2: Tree<T>): Tree<T> {
-        if (Math.round(rangeRandom(0, 1)) == 0) {
-            UnionFind.getTop(tree1).childList.push(UnionFind.getTop(tree2));
-            return tree1;
-        } else {
-            UnionFind.getTop(tree2).childList.push(UnionFind.getTop(tree1));
-            return tree2;
+
+    uniton(tree: DisjointSet<T>): boolean {
+        if (this.same(tree)) {
+            return false;
         }
+        this.getTop().addChild(tree.getTop());
+        return true;
+    }
+    getTop(): DisjointSet<T> {
+        if (this.parent) {
+            const top = this.parent.getTop();
+            this.parent = top;
+            return top;
+        }
+        return this;
+    }
+    same(tree: DisjointSet<T>): boolean {
+        return this.getTop() == tree.getTop();
     }
 }
 type RoomTree = {
