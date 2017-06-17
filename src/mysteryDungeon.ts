@@ -2,15 +2,43 @@ import "pixi.js";
 import { Triangle, Circle, Point } from "./shape";
 import { Room } from "./room";
 
+type RoomCreateConfig = {
+    minWidthNum: number,
+    minHeightNum: number,
+    maxWidthNum: number,
+    maxHeightNum: number,
+    maxRangeNumX: number,
+    maxRangeNumY: number,
+    gridSize: number,
+    volume: number, //作成する数
+}
+export enum Land {
+    WALL,
+    GROUND,
+    WATER,
+}
+export class Item {
+
+}
+export class Character {
+}
+export class Cell {
+    constructor(public x: number, public y: number, public gridSize: number, public ground: Land, public items: Item[] = [], public chara: Character | null = null) {
+    }
+}
+
 
 function rangeRandom(min: number, max: number): number {
     return Math.random() * (max - min) + min;
 }
+function rangeRandomInt(min: number, max: number): number {
+    return Math.floor(rangeRandom(min, max));
+}
 function range(range: number) {
     return new Array(range).fill(0).map((e, i) => i);
 }
-function roundGridSize(value: number, gridSize: number): number {
-    return Math.round(value - value % gridSize);
+function floorGridSize(size: number, gridSize: number) {
+    return Math.floor(size / gridSize);
 }
 
 class Edge<T>{
@@ -18,7 +46,7 @@ class Edge<T>{
     constructor(public pair1: T, public pair2: T, public range: number) {
     }
 }
-export class RoomPair extends Edge<Room> {
+export class PathWay extends Edge<Room> {
     constructor(pair1: Room, pair2: Room) {
         super(pair1, pair2, Math.hypot(pair1.pos.x - pair2.pos.x, pair1.pos.y - pair2.pos.y));
     }
@@ -26,27 +54,72 @@ export class RoomPair extends Edge<Room> {
 
 export class MysteryDungeon {
     roomList: Room[];
-    roomGraph: RoomPair[];
+    pathWay: PathWay[];
+    grid: Cell[][];
     constructor() {
-        this.roomList = RoomOperator.createRoomList(40, 40, 600, 600, 4, 4);
-        this.roomGraph = RoomOperator.connectRoom(this.roomList);
-        this.roomTree = MinimumSpanningTree.create(this.roomGraph);
+        const roomCreateConfig = {
+            minWidthNum: 4,
+            minHeightNum: 4,
+            maxWidthNum: 10,
+            maxHeightNum: 10,
+            maxRangeNumX: 60,
+            maxRangeNumY: 60,
+            gridSize: 10,
+            volume: 10, //作成する数
+        }
+        this.grid = range(roomCreateConfig.maxRangeNumX).map((e, x) => range(roomCreateConfig.maxRangeNumY).map((e, y) =>
+            new Cell(
+                x,
+                y,
+                roomCreateConfig.gridSize,
+                Land.GROUND,
+            )));
+        this.roomList = RoomOperator.createRoomList(this, roomCreateConfig);
+        const roomAllPath = RoomOperator.connectRoom(this.roomList);
+        const roomMinimumPath = RoomOperator.minimumSpanningList(roomAllPath);
+        this.pathWay = roomMinimumPath;
+    }
+    draw(render: PIXI.Graphics) {
+        for (let room of this.roomList) {
+            room.draw(render);
+        }
+        for (let pair of this.pathWay) {
+            render
+                .endFill()
+                .lineStyle(1, 0xff00ff)
+                .moveTo(pair.pair1.pos.x, pair.pair1.pos.y)
+                .lineTo(pair.pair2.pos.x, pair.pair2.pos.y);
+        }
+    }
+    getAreaGrid(startX: number, startY: number, width: number, height: number) {
+        let resultGrid = this.grid.slice(startX, startX + width);
+        for (let i = 0; i < resultGrid.length; i++) {
+            const yGrid = resultGrid[i];
+            resultGrid[i] = yGrid.slice(startY, startY + height);
+        }
+        return resultGrid;
     }
 }
-
 class RoomOperator {
-    static createRoomList(maxWidth: number, maxHeight: number, maxrangeX: number, maxrangeY: number, gridSize: number = 4, pos: number = 10): Room[] {
+    static generate2DGred(roomList: Room[], pathWay: PathWay, widthNum: number, heightNum: number, gridSize: number) {
+        for (let room of roomList) {
+        }
+        return;
+    }
+    static createRoomList(dungeon: MysteryDungeon, config: RoomCreateConfig): Room[] {
         let list: Room[] = [];
-        for (let count of range(pos)) {
-            let width = roundGridSize(rangeRandom(10, maxWidth), gridSize);
-            let height = roundGridSize(rangeRandom(10, maxHeight), gridSize);
+        for (let count of range(config.volume)) {
+            const widthNum = rangeRandomInt(config.minWidthNum, config.maxWidthNum);
+            const heightNum = rangeRandomInt(config.minHeightNum, config.maxHeightNum);
+            const startX = rangeRandomInt(0, config.maxRangeNumX - widthNum);
+            const startY = rangeRandomInt(0, config.maxRangeNumY - heightNum);
             list.push(new Room(
+                dungeon,
+                dungeon.getAreaGrid(startX, startY, widthNum, heightNum),
                 new Point(
-                    roundGridSize(rangeRandom(10, maxrangeX), gridSize) - width / 2,
-                    roundGridSize(rangeRandom(10, maxrangeY), gridSize) - height / 2,
-                ),
-                width,
-                height,
+                    startX * config.gridSize + widthNum * config.gridSize / 2,
+                    startY * config.gridSize + heightNum * config.gridSize / 2,
+                )
             ));
         }
         return list;
@@ -78,7 +151,7 @@ class RoomOperator {
                     //tmpTriangleMapに追加する
                     //重複する三角形ならboolをfalseにする
                     function tmpSet(node: DelaunayNode) {
-                        if (tmpDelaunayNodeMap.has(node.triangle.toString()) || delaunayNodeMap.has(node.triangle.toString())) {
+                        if (tmpDelaunayNodeMap.has(node.triangle.toString())) {
                             tmpDelaunayNodeMap.set(node.triangle.toString(), { node: node, bool: false });
                         } else {
                             tmpDelaunayNodeMap.set(node.triangle.toString(), { node: node, bool: true });
@@ -126,77 +199,77 @@ class RoomOperator {
             }
         }
 
-        const roomPairList: RoomPair[] = [];
+        const roomPairList: PathWay[] = [];
         for (let delaunayNode of delaunayNodeMap.values()) {
-            const roomPair = new RoomPair(delaunayNode.room1!, delaunayNode.room2!)
-            roomPairList.push(roomPair);
-            delaunayNode.room1!.connectRoomList.push(delaunayNode.room2!, delaunayNode.room3!);
-            delaunayNode.room1!.connectEdgeList.push(roomPair);
+            if (delaunayNode.room1 == null || delaunayNode.room2 == null || delaunayNode.room3 == null) {
+                throw new Error();
+            }
+            const roomPair1 = new PathWay(delaunayNode.room1, delaunayNode.room2)
+            roomPairList.push(roomPair1);
 
-            delaunayNode.room2!.connectRoomList.push(delaunayNode.room1!, delaunayNode.room3!);
-            delaunayNode.room2!.connectEdgeList.push(roomPair);
+            const roomPair2 = new PathWay(delaunayNode.room2, delaunayNode.room3)
+            roomPairList.push(roomPair2);
 
-            delaunayNode.room3!.connectRoomList.push(delaunayNode.room3!, delaunayNode.room1!);
-            delaunayNode.room3!.connectEdgeList.push(roomPair);
+            const roomPair3 = new PathWay(delaunayNode.room3, delaunayNode.room1)
+            roomPairList.push(roomPair3);
         }
         return roomPairList;
     }
+    static minimumSpanningList(edgeList: PathWay[]): PathWay[] {
+        class DisjointSet<T> {
+            node: T;
+            childList: DisjointSet<T>[] = [];
+            parent: DisjointSet<T> | null = null;
 
-}
-class MinimumSpanningTree {
-    static create(edgeList: RoomPair[]): RoomPair[] {
-        const sortedEdgeList = edgeList.slice().sort((a, b) => a.range - b.range);
-        const edgeDisjointSet:{[key: Room]: DisjointSet<Room>}= {};
-        const edgeDisjointSet:{[key: Room]: DisjointSet<Room>}= {};
-        for(let edge of edgeList){
-            edgeDisjointSet[edge.pair1]
-        }
-        for (let edge of sortedEdgeList) {
-            if (!edgeList[edge.pair1].same(edgeList[edge.node2])) {
-                this.tree.push(edge);
-                edgeList[edge.pair1].uniton(edgeList[edge.node2]);
-                console.log(edgeList);
+            addChild(child: DisjointSet<T>) {
+                this.childList.push(child);
+                child.parent = this;
+            }
+
+            constructor(node: T, parent: DisjointSet<T> | null = null) {
+                this.node = node;
+                this.parent = parent;
+            }
+
+            uniton(tree: DisjointSet<T>): boolean {
+                if (this.same(tree)) {
+                    return false;
+                }
+                this.getTop().addChild(tree.getTop());
+                return true;
+            }
+            getTop(): DisjointSet<T> {
+                if (this.parent) {
+                    const top = this.parent.getTop();
+                    this.parent = top;
+                    return top;
+                }
+                return this;
+            }
+            same(tree: DisjointSet<T>): boolean {
+                return this.getTop() == tree.getTop();
             }
         }
-        return;
-    }
-}
-class DisjointSet<T> {
-    node: T;
-    childList: DisjointSet<T>[] = [];
-    parent: DisjointSet<T> | null = null;
-
-    addChild(child: DisjointSet<T>) {
-        this.childList.push(child);
-        child.parent = this;
-    }
-
-    constructor(node: T, parent: DisjointSet<T> | null = null) {
-        this.node = node;
-        this.parent = parent;
-    }
-
-    uniton(tree: DisjointSet<T>): boolean {
-        if (this.same(tree)) {
-            return false;
+        const sortedEdgeList = edgeList.slice().sort((a, b) => a.range - b.range);
+        const edgeDisjointSet: Map<Room, DisjointSet<Room>> = new Map();
+        for (let edge of sortedEdgeList) {
+            //効率悪い
+            edgeDisjointSet.set(edge.pair1, new DisjointSet(edge.pair1));
+            edgeDisjointSet.set(edge.pair2, new DisjointSet(edge.pair2));
         }
-        this.getTop().addChild(tree.getTop());
-        return true;
-    }
-    getTop(): DisjointSet<T> {
-        if (this.parent) {
-            const top = this.parent.getTop();
-            this.parent = top;
-            return top;
+
+        const minimunSpanningEdgeList: PathWay[] = [];
+        for (let edge of sortedEdgeList) {
+            const node1 = edgeDisjointSet.get(edge.pair1);
+            const node2 = edgeDisjointSet.get(edge.pair2);
+            if (!(node1 && node2)) {
+                throw new Error();
+            }
+            if (!node1.same(node2)) {
+                minimunSpanningEdgeList.push(edge);
+                node1.uniton(node2);
+            }
         }
-        return this;
+        return minimunSpanningEdgeList;
     }
-    same(tree: DisjointSet<T>): boolean {
-        return this.getTop() == tree.getTop();
-    }
-}
-type RoomTree = {
-    node: RoomPair;
-    parent: RoomPair | null;
-    childList: RoomTree[];
 }
