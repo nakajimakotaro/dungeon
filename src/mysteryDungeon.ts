@@ -38,21 +38,20 @@ export class PathWay extends Edge<Room> {
     grid: Cell[][];
     constructor(private dungeon: MysteryDungeon, pair1: Room, pair2: Room) {
         super(pair1, pair2, Math.hypot(pair1.pos.x - pair2.pos.x, pair1.pos.y - pair2.pos.y));
-        this.pairConnect();
     }
 
-    pairConnect() {
+    setGrid() {
         function selectDirection(room1: Room, room2: Room, x: number, y: number): "right" | "left" | "up" | "down" {
             const xRange = Math.abs(x - room2.centerX); //x軸の距離
             const yRange = Math.abs(y - room2.centerY); //y軸の距離
             if (xRange > yRange) {
-                if (x < room2.startX) {
+                if (x < room2.centerX) {
                     return "right";
                 } else {
                     return "left";
                 }
             } else {
-                if (y < room2.startY) {
+                if (y < room2.centerY) {
                     return "down";
                 } else {
                     return "up";
@@ -62,16 +61,9 @@ export class PathWay extends Edge<Room> {
         function createWay(dungeon: MysteryDungeon, pathWay: PathWay, room1: Room, room2: Room, x: number = room1.centerX, y: number = room1.centerY) {
             const direction = selectDirection(room1, room2, x, y);
             while (true) {
-                if (
-                    (direction == "left" || direction == "right") && x == room2.centerX ||
-                    (direction == "down" || direction == "up") && y == room2.centerY) {
-                    //折れ曲がる
-                    createWay(dungeon, pathWay, room1, room2, x, y);
-                    break;
-                }
-                if (dungeon.grid[x][y].belong == room2) {
-                    //接続完了
-                    break;
+if (dungeon.grid[x][y].belong instanceof Wall) {
+                    dungeon.grid[x][y].belong = pathWay;
+                    dungeon.grid[x][y].color = 0x009944;
                 }
                 switch (direction) {
                     case "left":
@@ -87,10 +79,16 @@ export class PathWay extends Edge<Room> {
                         y++;
                         break;
                 }
-                //console.log(dungeon.grid[x][y].belong)
-                if (dungeon.grid[x][y].belong instanceof Wall) {
-                    dungeon.grid[x][y].belong = pathWay;
-                    dungeon.grid[x][y].color = 0x009944;
+               if (dungeon.grid[x][y].belong == room2) {
+                    //接続完了
+                    break;
+                }
+                if (
+                    (direction == "left" || direction == "right") && x == room2.centerX ||
+                    (direction == "down" || direction == "up") && y == room2.centerY) {
+                    //折れ曲がる
+                    createWay(dungeon, pathWay, room1, room2, x, y);
+                    break;
                 }
             }
         }
@@ -121,7 +119,9 @@ export class MysteryDungeon {
     roomList: Room[];
     pathWay: PathWay[];
     grid: Cell[][];
+    gridSize: number;
     constructor() {
+        this.gridSize = 10;
         const roomCreateConfig = {
             minWidthNum: 4,
             minHeightNum: 4,
@@ -130,7 +130,7 @@ export class MysteryDungeon {
             maxRangeNumX: 60,
             maxRangeNumY: 60,
             gridSize: 10,
-            volume: 3, //作成する数
+            volume: 10, //作成する数
         }
         this.grid = range(roomCreateConfig.maxRangeNumX).map((e, x) => range(roomCreateConfig.maxRangeNumY).map((e, y) =>
             new Cell(
@@ -140,9 +140,12 @@ export class MysteryDungeon {
                 wall,
             )));
         this.roomList = RoomOperator.createRoomList(this, roomCreateConfig);
+        RoomOperator.adjustRoom(this.roomList);
         const roomAllPath = RoomOperator.connectRoom(this, this.roomList);
         const roomMinimumPath = RoomOperator.minimumSpanningList(roomAllPath);
         this.pathWay = roomMinimumPath;
+        this.roomList.forEach(e => e.setGrid());
+        this.pathWay.forEach(e => e.setGrid());
     }
     draw(render: PIXI.Graphics) {
         for (let yGrid of this.grid) {
@@ -170,6 +173,49 @@ class RoomOperator {
         }
         return;
     }
+    //かぶっている部屋をずらす
+    static adjustRoom(roomList: Room[]) {
+        function collitionRect(a: Room, b: Room) {
+            let collisionRect = { x: 0, y: 0, w: 0, h: 0 };
+            collisionRect.x = Math.max(a.startX, b.startX);
+            collisionRect.y = Math.max(a.startY, b.startY);
+
+            let tempA:Room;
+            let tempB:Room;
+            if (collisionRect.x == a.startX) {
+                tempA = a;
+                tempB = b;
+            } else {
+                tempA = a;
+                tempB = b;
+            }
+            collisionRect.w = (tempB.startX + tempB.width) - tempA.startX;
+
+            if (collisionRect.y == a.startY) {
+                tempA = a;
+                tempB = b;
+            } else {
+                tempA = a;
+                tempB = b;
+            }
+            collisionRect.h = (tempB.startY + tempB.height) - tempA.startY;
+            return collisionRect;
+        }
+        for (let x = 0; x < roomList.length; x++) {
+            for (let y = x; y < roomList.length; y++) {
+                let a = roomList[x];
+                let b = roomList[y];
+                let rect = collitionRect(a, b);
+                console.log(rect)
+                if (rect.h > 0 && rect.w > 0) {
+                    if (a.startX - rect.w < 0 || a.startY - rect.h < 0) {
+                        //TODO
+                    } else {
+                    }
+                }
+            }
+        }
+    }
     static createRoomList(dungeon: MysteryDungeon, config: RoomCreateConfig): Room[] {
         let list: Room[] = [];
         for (let count of range(config.volume)) {
@@ -183,10 +229,6 @@ class RoomOperator {
                 startY,
                 widthNum,
                 heightNum,
-                new Point(
-                    startX * config.gridSize + widthNum * config.gridSize / 2,
-                    startY * config.gridSize + heightNum * config.gridSize / 2,
-                )
             ));
         }
         return list;

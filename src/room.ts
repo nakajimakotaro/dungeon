@@ -1,23 +1,33 @@
 import { Point } from "./shape";
-import { PathWay, Cell, MysteryDungeon} from "./mysteryDungeon";
+import { PathWay, Cell, MysteryDungeon } from "./mysteryDungeon";
 export class Room {
-    grid:Cell[][];
-    constructor(protected dungeon: MysteryDungeon, public startX:number, public startY:number, public width:number, public height:number, public pos: Point) {
-        this.grid = this.getAreaGrid(startX, startY, width, height);
-        for(let yGrid of this.grid){
-            for(let cell of yGrid){
+    get grid() {
+        return this.getAreaGrid(this.startX, this.startY, this.width, this.height);
+    }
+    get pos() {
+        return new Point(this.centerX * this.dungeon.gridSize, this.centerY * this.dungeon.gridSize);
+    }
+    get centerX() {
+        return this.startX + Math.floor(this.width / 2) + this.width % 2;
+    }
+    get centerY() {
+        return this.startY + Math.floor(this.height / 2) + this.height % 2;
+    }
+    constructor(protected dungeon: MysteryDungeon, public startX: number, public startY: number, public width: number, public height: number) {
+    }
+    setGrid() {
+        for (let yGrid of this.grid) {
+            for (let cell of yGrid) {
                 cell.belong = this;
                 cell.color = 0x3399cc;
             }
         }
     }
-    get centerX(){
-        return this.startX + Math.floor(this.width / 2) + this.width % 2;
+    move(x: number, y: number) {
+        this.startX = this.startX + x;
+        this.startY = this.startX + y;
     }
-    get centerY(){
-        return this.startY + Math.floor(this.height / 2) + this.height % 2;
-    }
-    getAreaGrid(startX: number, startY: number, width: number, height: number):Cell[][]{
+    getAreaGrid(startX: number, startY: number, width: number, height: number): Cell[][] {
         let resultGrid = this.dungeon.grid.slice(startX, startX + width);
         for (let i = 0; i < resultGrid.length; i++) {
             const yGrid = resultGrid[i];
