@@ -206,12 +206,9 @@ class RoomOperator {
                 let a = roomList[x];
                 let b = roomList[y];
                 let rect = collitionRect(a, b);
-                console.log(rect)
                 if (rect.h > 0 && rect.w > 0) {
-                    if (a.startX - rect.w < 0 || a.startY - rect.h < 0) {
-                        //TODO
-                    } else {
-                    }
+//                    a.startX = b.startX + b.width;
+//                    a.startY = b.startY + b.height;
                 }
             }
         }
