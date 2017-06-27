@@ -8,10 +8,10 @@ export class Room {
         return new Point(this.centerX * this.dungeon.gridSize, this.centerY * this.dungeon.gridSize);
     }
     get centerX() {
-        return this.startX + Math.floor(this.width / 2) + this.width % 2;
+        return this.startX + Math.floor(this.width / 2);
     }
     get centerY() {
-        return this.startY + Math.floor(this.height / 2) + this.height % 2;
+        return this.startY + Math.floor(this.height / 2);
     }
     constructor(protected dungeon: MysteryDungeon, public startX: number, public startY: number, public width: number, public height: number) {
     }

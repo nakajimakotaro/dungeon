@@ -1,6 +1,7 @@
 import "pixi.js";
 import { Triangle, Circle, Point } from "./shape";
 import { Room } from "./room";
+import { Game } from "./game";
 
 type RoomCreateConfig = {
     minWidthNum: number,
@@ -26,6 +27,11 @@ export class Cell {
         public items: Item[] = [],
         public chara: Character | null = null,
         public color: number = 0) {
+    }
+    draw(render: PIXI.Graphics) {
+        render
+            .beginFill(this.color)
+            .drawRect(this.x * this.gridSize, this.y * this.gridSize, this.gridSize, this.gridSize);
     }
 }
 
@@ -115,8 +121,7 @@ function floorGridSize(size: number, gridSize: number) {
     return Math.floor(size / gridSize);
 }
 
-class Wall {
-
+export class Wall {
 }
 const wall = new Wall();
 
@@ -125,7 +130,7 @@ export class MysteryDungeon {
     pathWay: PathWay[];
     grid: Cell[][];
     gridSize: number;
-    constructor() {
+    constructor(public game:Game) {
         this.gridSize = 10;
         const roomCreateConfig = {
             minWidthNum: 4,
@@ -155,22 +160,14 @@ export class MysteryDungeon {
     draw(render: PIXI.Graphics) {
         for (let yGrid of this.grid) {
             for (let cell of yGrid) {
-                render
-                    .beginFill(cell.color)
-                    .drawRect(cell.x * cell.gridSize, cell.y * cell.gridSize, cell.gridSize, cell.gridSize);
+                cell.draw(render);
             }
         }
-        //for (let room of this.roomList) {
-        //    room.draw(render);
-        //}
-        //for (let pair of this.pathWay) {
-        //    render
-        //        .endFill()
-        //        .lineStyle(1, 0xff00ff)
-        //        .moveTo(pair.pair1.pos.x, pair.pair1.pos.y)
-        //        .lineTo(pair.pair2.pos.x, pair.pair2.pos.y);
-        //}
     }
+    isGridRange(x:number, y:number){
+        return x >= 0 && y >= 0 && x < this.grid.length && y < this.grid[0].length;
+    }
+    
 }
 class RoomOperator {
     static generate2DGred(roomList: Room[], pathWay: PathWay, widthNum: number, heightNum: number, gridSize: number) {
