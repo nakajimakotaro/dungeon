@@ -60,8 +60,10 @@ export class PathWay extends Edge<Room> {
         }
         function createWay(dungeon: MysteryDungeon, pathWay: PathWay, room1: Room, room2: Room, x: number = room1.centerX, y: number = room1.centerY) {
             const direction = selectDirection(room1, room2, x, y);
+            console.log(room1);
+            console.log(room2);
             while (true) {
-if (dungeon.grid[x][y].belong instanceof Wall) {
+                if (dungeon.grid[x][y].belong instanceof Wall) {
                     dungeon.grid[x][y].belong = pathWay;
                     dungeon.grid[x][y].color = 0x009944;
                 }
@@ -79,7 +81,10 @@ if (dungeon.grid[x][y].belong instanceof Wall) {
                         y++;
                         break;
                 }
-               if (dungeon.grid[x][y].belong == room2) {
+
+                console.log(direction);
+                console.log(dungeon.grid[x][y].belong);
+                if (dungeon.grid[x][y].belong == room2) {
                     //接続完了
                     break;
                 }
@@ -140,11 +145,11 @@ export class MysteryDungeon {
                 wall,
             )));
         this.roomList = RoomOperator.createRoomList(this, roomCreateConfig);
-        RoomOperator.adjustRoom(this.roomList);
+        RoomOperator.adjustRoom(roomCreateConfig, this.roomList);
+        this.roomList.forEach(e => e.setGrid());
         const roomAllPath = RoomOperator.connectRoom(this, this.roomList);
         const roomMinimumPath = RoomOperator.minimumSpanningList(roomAllPath);
         this.pathWay = roomMinimumPath;
-        this.roomList.forEach(e => e.setGrid());
         this.pathWay.forEach(e => e.setGrid());
     }
     draw(render: PIXI.Graphics) {
@@ -174,20 +179,20 @@ class RoomOperator {
         return;
     }
     //かぶっている部屋をずらす
-    static adjustRoom(roomList: Room[]) {
+    static adjustRoom(config: RoomCreateConfig, roomList: Room[]) {
         function collitionRect(a: Room, b: Room) {
             let collisionRect = { x: 0, y: 0, w: 0, h: 0 };
             collisionRect.x = Math.max(a.startX, b.startX);
             collisionRect.y = Math.max(a.startY, b.startY);
 
-            let tempA:Room;
-            let tempB:Room;
+            let tempA: Room;
+            let tempB: Room;
             if (collisionRect.x == a.startX) {
                 tempA = a;
                 tempB = b;
             } else {
-                tempA = a;
-                tempB = b;
+                tempA = b;
+                tempB = a;
             }
             collisionRect.w = (tempB.startX + tempB.width) - tempA.startX;
 
@@ -195,38 +200,48 @@ class RoomOperator {
                 tempA = a;
                 tempB = b;
             } else {
-                tempA = a;
-                tempB = b;
+                tempA = b;
+                tempB = a;
             }
             collisionRect.h = (tempB.startY + tempB.height) - tempA.startY;
             return collisionRect;
         }
-        for (let x = 0; x < roomList.length; x++) {
-            for (let y = x; y < roomList.length; y++) {
-                let a = roomList[x];
-                let b = roomList[y];
-                let rect = collitionRect(a, b);
-                if (rect.h > 0 && rect.w > 0) {
-//                    a.startX = b.startX + b.width;
-//                    a.startY = b.startY + b.height;
+        let collisionFlag = false;
+        do {
+            collisionFlag = false;
+            for (let x = 0; x < roomList.length; x++) {
+                for (let y = x + 1; y < roomList.length; y++) {
+                    let a = roomList[x];
+                    let b = roomList[y];
+                    let rect = collitionRect(a, b);
+                    if (rect.h > 0 && rect.w > 0) {
+                        collisionFlag = true;
+                        a.startX = rangeRandomInt(0, config.maxRangeNumX - a.width);
+                        a.startY = rangeRandomInt(0, config.maxRangeNumY - a.height);
+                    }
                 }
             }
-        }
+        } while (collisionFlag);
     }
+    static createRoom(dungeon: MysteryDungeon, config: RoomCreateConfig): Room {
+        const widthNum = rangeRandomInt(config.minWidthNum, config.maxWidthNum);
+        const heightNum = rangeRandomInt(config.minHeightNum, config.maxHeightNum);
+        const startX = rangeRandomInt(0, config.maxRangeNumX - widthNum);
+        const startY = rangeRandomInt(0, config.maxRangeNumY - heightNum);
+        return new Room(
+            dungeon,
+            startX,
+            startY,
+            widthNum,
+            heightNum,
+        );
+    }
+
+
     static createRoomList(dungeon: MysteryDungeon, config: RoomCreateConfig): Room[] {
         let list: Room[] = [];
         for (let count of range(config.volume)) {
-            const widthNum = rangeRandomInt(config.minWidthNum, config.maxWidthNum);
-            const heightNum = rangeRandomInt(config.minHeightNum, config.maxHeightNum);
-            const startX = rangeRandomInt(0, config.maxRangeNumX - widthNum);
-            const startY = rangeRandomInt(0, config.maxRangeNumY - heightNum);
-            list.push(new Room(
-                dungeon,
-                startX,
-                startY,
-                widthNum,
-                heightNum,
-            ));
+            list.push(RoomOperator.createRoom(dungeon, config));
         }
         return list;
     }
