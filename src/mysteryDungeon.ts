@@ -1,112 +1,11 @@
 import "pixi.js";
 import { Triangle, Circle, Point } from "./shape";
 import { Room } from "./room";
+import { Dungeon } from "./dungeon";
+import { PathWay } from "./pathway";
+import { Cell } from "./cell";
 import { Game } from "./game";
-
-type RoomCreateConfig = {
-    minWidthNum: number,
-    minHeightNum: number,
-    maxWidthNum: number,
-    maxHeightNum: number,
-    maxRangeNumX: number,
-    maxRangeNumY: number,
-    gridSize: number,
-    volume: number, //作成する数
-}
-export class Item {
-
-}
-export class Character {
-}
-export class Cell {
-    constructor(
-        public x: number,
-        public y: number,
-        public gridSize: number,
-        public belong: Room | PathWay | Wall,
-        public items: Item[] = [],
-        public chara: Character | null = null,
-        public color: number = 0) {
-    }
-    draw(render: PIXI.Graphics) {
-        render
-            .beginFill(this.color)
-            .drawRect(this.x * this.gridSize, this.y * this.gridSize, this.gridSize, this.gridSize);
-    }
-}
-
-class Edge<T>{
-    parentTree: Edge<T> | null;
-    constructor(public pair1: T, public pair2: T, public range: number) {
-    }
-}
-export class PathWay extends Edge<Room> {
-    grid: Cell[][];
-    constructor(private dungeon: MysteryDungeon, pair1: Room, pair2: Room) {
-        super(pair1, pair2, Math.hypot(pair1.pos.x - pair2.pos.x, pair1.pos.y - pair2.pos.y));
-    }
-
-    setGrid() {
-        function selectDirection(room1: Room, room2: Room, x: number, y: number): "right" | "left" | "up" | "down" {
-            const xRange = Math.abs(x - room2.centerX); //x軸の距離
-            const yRange = Math.abs(y - room2.centerY); //y軸の距離
-            if (xRange > yRange) {
-                if (x < room2.centerX) {
-                    return "right";
-                } else {
-                    return "left";
-                }
-            } else {
-                if (y < room2.centerY) {
-                    return "down";
-                } else {
-                    return "up";
-                }
-            }
-        }
-        function createWay(dungeon: MysteryDungeon, pathWay: PathWay, room1: Room, room2: Room, x: number = room1.centerX, y: number = room1.centerY) {
-            const direction = selectDirection(room1, room2, x, y);
-            console.log(room1);
-            console.log(room2);
-            while (true) {
-                if (dungeon.grid[x][y].belong instanceof Wall) {
-                    dungeon.grid[x][y].belong = pathWay;
-                    dungeon.grid[x][y].color = 0x009944;
-                }
-                switch (direction) {
-                    case "left":
-                        x--;
-                        break;
-                    case "right":
-                        x++;
-                        break;
-                    case "up":
-                        y--;
-                        break;
-                    case "down":
-                        y++;
-                        break;
-                }
-
-                console.log(direction);
-                console.log(dungeon.grid[x][y].belong);
-                if (dungeon.grid[x][y].belong == room2) {
-                    //接続完了
-                    break;
-                }
-                if (
-                    (direction == "left" || direction == "right") && x == room2.centerX ||
-                    (direction == "down" || direction == "up") && y == room2.centerY) {
-                    //折れ曲がる
-                    createWay(dungeon, pathWay, room1, room2, x, y);
-                    break;
-                }
-            }
-        }
-        createWay(this.dungeon, this, this.pair1, this.pair2);
-    }
-}
-
+import { wall } from "./wall";
 
 function rangeRandom(min: number, max: number): number {
     return Math.random() * (max - min) + min;
@@ -120,17 +19,20 @@ function range(range: number) {
 function floorGridSize(size: number, gridSize: number) {
     return Math.floor(size / gridSize);
 }
-
-export class Wall {
+type RoomCreateConfig = {
+    minWidthNum: number,
+    minHeightNum: number,
+    maxWidthNum: number,
+    maxHeightNum: number,
+    maxRangeNumX: number,
+    maxRangeNumY: number,
+    gridSize: number,
+    volume: number, //作成する数
 }
-const wall = new Wall();
 
-export class MysteryDungeon {
-    roomList: Room[];
-    pathWay: PathWay[];
-    grid: Cell[][];
-    gridSize: number;
-    constructor(public game:Game) {
+export class MysteryDungeon extends Dungeon {
+    constructor(public game: Game) {
+        super(game);
         this.gridSize = 10;
         const roomCreateConfig = {
             minWidthNum: 4,
@@ -149,34 +51,17 @@ export class MysteryDungeon {
                 roomCreateConfig.gridSize,
                 wall,
             )));
-        this.roomList = RoomOperator.createRoomList(this, roomCreateConfig);
-        RoomOperator.adjustRoom(roomCreateConfig, this.roomList);
-        this.roomList.forEach(e => e.setGrid());
-        const roomAllPath = RoomOperator.connectRoom(this, this.roomList);
-        const roomMinimumPath = RoomOperator.minimumSpanningList(roomAllPath);
-        this.pathWay = roomMinimumPath;
-        this.pathWay.forEach(e => e.setGrid());
+        this.roomList = this.generateRoom(roomCreateConfig);
+        this.pathWay = this.generatePathWay(this.roomList);
     }
-    draw(render: PIXI.Graphics) {
-        for (let yGrid of this.grid) {
-            for (let cell of yGrid) {
-                cell.draw(render);
-            }
-        }
-    }
-    isGridRange(x:number, y:number){
-        return x >= 0 && y >= 0 && x < this.grid.length && y < this.grid[0].length;
-    }
-    
-}
-class RoomOperator {
-    static generate2DGred(roomList: Room[], pathWay: PathWay, widthNum: number, heightNum: number, gridSize: number) {
-        for (let room of roomList) {
-        }
-        return;
+    generateRoom(roomCreateConfig:RoomCreateConfig) {
+        let roomList = this.createRoomList(roomCreateConfig);
+        this.adjustRoom(roomCreateConfig, roomList);
+        roomList.forEach(e => e.setGrid());
+        return roomList;
     }
     //かぶっている部屋をずらす
-    static adjustRoom(config: RoomCreateConfig, roomList: Room[]) {
+    adjustRoom(config: RoomCreateConfig, roomList: Room[]) {
         function collitionRect(a: Room, b: Room) {
             let collisionRect = { x: 0, y: 0, w: 0, h: 0 };
             collisionRect.x = Math.max(a.startX, b.startX);
@@ -220,13 +105,13 @@ class RoomOperator {
             }
         } while (collisionFlag);
     }
-    static createRoom(dungeon: MysteryDungeon, config: RoomCreateConfig): Room {
+    createRoom(config: RoomCreateConfig): Room {
         const widthNum = rangeRandomInt(config.minWidthNum, config.maxWidthNum);
         const heightNum = rangeRandomInt(config.minHeightNum, config.maxHeightNum);
         const startX = rangeRandomInt(0, config.maxRangeNumX - widthNum);
         const startY = rangeRandomInt(0, config.maxRangeNumY - heightNum);
         return new Room(
-            dungeon,
+            this,
             startX,
             startY,
             widthNum,
@@ -235,16 +120,22 @@ class RoomOperator {
     }
 
 
-    static createRoomList(dungeon: MysteryDungeon, config: RoomCreateConfig): Room[] {
+    createRoomList(config: RoomCreateConfig): Room[] {
         let list: Room[] = [];
         for (let count of range(config.volume)) {
-            list.push(RoomOperator.createRoom(dungeon, config));
+            list.push(this.createRoom(config));
         }
         return list;
     }
-    //いい感じに部屋同士をつなげる
+    generatePathWay(roomList:Room[]){
+        const nearAllPathWay = this.nearConnect(roomList);
+        const minimumPathWay = this.minimumSpanningList(nearAllPathWay);
+        minimumPathWay.forEach(e => e.setGrid());
+        return minimumPathWay;
+    }
+    //近い部屋同士をつなげる
     //ドロネー三角形分割している
-    static connectRoom(dungeon: MysteryDungeon, roomList: Room[]) {
+    nearConnect(roomList: Room[]) {
         type DelaunayNode = {
             triangle: Triangle,
             room1?: Room;
@@ -322,18 +213,18 @@ class RoomOperator {
             if (delaunayNode.room1 == null || delaunayNode.room2 == null || delaunayNode.room3 == null) {
                 throw new Error();
             }
-            const roomPair1 = new PathWay(dungeon, delaunayNode.room1, delaunayNode.room2)
+            const roomPair1 = new PathWay(this, delaunayNode.room1, delaunayNode.room2)
             roomPairList.push(roomPair1);
 
-            const roomPair2 = new PathWay(dungeon, delaunayNode.room2, delaunayNode.room3)
+            const roomPair2 = new PathWay(this, delaunayNode.room2, delaunayNode.room3)
             roomPairList.push(roomPair2);
 
-            const roomPair3 = new PathWay(dungeon, delaunayNode.room3, delaunayNode.room1)
+            const roomPair3 = new PathWay(this, delaunayNode.room3, delaunayNode.room1)
             roomPairList.push(roomPair3);
         }
         return roomPairList;
     }
-    static minimumSpanningList(edgeList: PathWay[]): PathWay[] {
+    minimumSpanningList(edgeList: PathWay[]): PathWay[] {
         class DisjointSet<T> {
             node: T;
             childList: DisjointSet<T>[] = [];

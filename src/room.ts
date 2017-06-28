@@ -1,5 +1,6 @@
 import { Point } from "./shape";
-import { PathWay, Cell, MysteryDungeon } from "./mysteryDungeon";
+import { MysteryDungeon } from "./mysteryDungeon";
+import { Cell } from "./cell";
 export class Room {
     get grid() {
         return this.getAreaGrid(this.startX, this.startY, this.width, this.height);
