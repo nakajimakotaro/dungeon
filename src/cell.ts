@@ -1,5 +1,5 @@
 import {Room} from "./room";
-import {PathWay} from "./pathWay";
+import {PathWay} from "./pathway";
 import {Wall} from "./wall";
 import {Item} from "./item";
 import {Character} from "./character";

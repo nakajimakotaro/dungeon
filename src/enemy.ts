@@ -5,10 +5,9 @@ import { Point } from "./shape";
 
 export class Enemy {
     pos: Point;
-    angle:number = 0;
-    constructor(public game: Game) {
-        this.pos = new Point(this.game.dungeon.roomList[1].centerX, this.game.dungeon.roomList[1].centerY);
-        this.trun("BACK");
+    angle: number = 0;
+    constructor(public game: Game, idx) {
+        this.pos = new Point(this.game.dungeon.roomList[idx].centerX, this.game.dungeon.roomList[idx].centerY);
     }
     update() {
         if (this.game.frame % 10 == 0) {
@@ -21,13 +20,10 @@ export class Enemy {
             .drawRect(this.pos.x * this.game.dungeon.cellSize, this.pos.y * this.game.dungeon.cellSize, this.game.dungeon.cellSize, this.game.dungeon.cellSize);
     }
     walk() {
-        this.move(this.angle);
-        if(!this.canMove(tish.angle)){
-            return false;
-        }else if(!this.canMove(tish.angle)){
-        }else if(!this.canMove(tish.angle)){
-        }else if(!this.canMove(tish.angle)){
+        if (!this.canMove(this.angle)) {
+            this.trun();
         }
+        this.move(this.angle);
     }
     canMove(angle: number): boolean {
         let x = Math.cos(angle);
@@ -40,8 +36,8 @@ export class Enemy {
         }
         return true;
     }
-    move(angle:number): boolean {
-        if(!this.canMove(angle)){
+    move(angle: number): boolean {
+        if (!this.canMove(angle)) {
             return false;
         }
         let x = Math.cos(angle);
@@ -52,17 +48,37 @@ export class Enemy {
         this.game.dungeon.grid[this.pos.x][this.pos.y].chara = this;
         return true;
     }
-    trun(nowAngle: ssdirection: "LEFT" | "RIGHT" | "BACK") {
-        switch (direction) {
-            case "LEFT":
-                this.angle += Math.PI / 2;
-                break;
-            case "RIGHT":
-                this.angle -= Math.PI / 2;
-                break;
-            case "BACK":
-                this.angle += Math.PI;
-                break;
+    trun() {
+        let angle = 0;
+        if (this.canMove(this.angle)) {
+            angle = this.angle;
+        } else if (this.canMove(this.angle + Math.PI / 2)) {
+            angle = this.angle + Math.PI / 2;
+        } else if (this.canMove(this.angle + Math.PI)) {
+            angle = this.angle + Math.PI;
+        } else if (this.canMove(this.angle + Math.PI + Math.PI / 2)) {
+            angle = this.angle + Math.PI + Math.PI / 2;
         }
+        let isUpdate = false;
+        do {
+            if (Math.abs(angle) < 0.1) {
+                isUpdate = true;
+                this.angle = 0;
+            } else if (Math.abs(angle) - Math.PI / 2 < 0.1) {
+                isUpdate = true;
+                this.angle = Math.PI / 2;
+            } else if (Math.abs(angle) - Math.PI < 0.1) {
+                isUpdate = true;
+                this.angle = Math.PI;
+            } else if (Math.abs(angle) - (Math.PI + Math.PI / 2) < 0.1) {
+                isUpdate = true;
+                this.angle = Math.PI + Math.PI / 2;
+            }
+            if(angle > 0){
+                angle -= Math.PI * 2;
+            }else{
+                angle += Math.PI * 2;
+            }
+        } while (!isUpdate);
     }
 }

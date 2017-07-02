@@ -11,7 +11,7 @@ export class Game{
     render: PIXI.Graphics;
     dungeon: MysteryDungeon;
     player: Player;
-    enemy: Enemy;
+    enemyList: Enemy[];
     inputManager:InputManager;
     frame = 0;
     constructor() {
@@ -23,7 +23,7 @@ export class Game{
         this.dungeon = new MysteryDungeon(this);
 
         this.player = new Player(this);
-        this.enemy = new Enemy(this);
+        this.enemyList = new Array(5).fill(0).map((e, i)=>new Enemy(this, i));
     }
     start() {
         this.loop();
@@ -32,13 +32,13 @@ export class Game{
     loop() {
         //update
         this.player.update();
-        this.enemy.update();
+        this.enemyList.forEach(e=>e.update());
 
         //draw
         this.render.clear();
         this.dungeon.draw(this.render);
         this.player.draw(this.render);
-        this.enemy.draw(this.render);
+        this.enemyList.forEach(e=>e.draw(this.render));
         this.frame++;
     }
     nextFrameTime() {
