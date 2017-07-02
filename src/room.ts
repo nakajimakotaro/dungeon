@@ -6,7 +6,8 @@ export class Room {
         return this.getAreaGrid(this.startX, this.startY, this.width, this.height);
     }
     get pos() {
-        return new Point(this.centerX * this.dungeon.gridSize, this.centerY * this.dungeon.gridSize);
+        //return new Point(this.centerX * this.dungeon.cellSize, this.centerY * this.dungeon.cellSize);
+        return new Point(this.centerX, this.centerY);
     }
     get centerX() {
         return this.startX + Math.floor(this.width / 2);

@@ -18,7 +18,7 @@ export class Player {
     draw(render: PIXI.Graphics) {
         render
             .beginFill(0xff0000)
-            .drawRect(this.pos.x * 10, this.pos.y * 10, 10, 10);
+            .drawRect(this.pos.x * this.game.dungeon.cellSize, this.pos.y * this.game.dungeon.cellSize, this.game.dungeon.cellSize, this.game.dungeon.cellSize);
     }
     walk(){
             const W = 87;

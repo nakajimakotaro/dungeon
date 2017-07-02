@@ -16,9 +16,6 @@ function rangeRandomInt(min: number, max: number): number {
 function range(range: number) {
     return new Array(range).fill(0).map((e, i) => i);
 }
-function floorGridSize(size: number, gridSize: number) {
-    return Math.floor(size / gridSize);
-}
 type RoomCreateConfig = {
     minWidthNum: number,
     minHeightNum: number,
@@ -26,14 +23,15 @@ type RoomCreateConfig = {
     maxHeightNum: number,
     maxRangeNumX: number,
     maxRangeNumY: number,
-    gridSize: number,
+    cellSize: number,
     volume: number, //作成する数
 }
 
 export class MysteryDungeon extends Dungeon {
+    cellSize:number;
     constructor(public game: Game) {
         super(game);
-        this.gridSize = 10;
+        this.cellSize = 10;
         const roomCreateConfig = {
             minWidthNum: 4,
             minHeightNum: 4,
@@ -41,14 +39,14 @@ export class MysteryDungeon extends Dungeon {
             maxHeightNum: 10,
             maxRangeNumX: 60,
             maxRangeNumY: 60,
-            gridSize: 10,
+            cellSize: 10,
             volume: 10, //作成する数
         }
         this.grid = range(roomCreateConfig.maxRangeNumX).map((e, x) => range(roomCreateConfig.maxRangeNumY).map((e, y) =>
             new Cell(
                 x,
                 y,
-                roomCreateConfig.gridSize,
+                roomCreateConfig.cellSize,
                 wall,
             )));
         this.roomList = this.generateRoom(roomCreateConfig);
@@ -145,7 +143,7 @@ export class MysteryDungeon extends Dungeon {
         //分割した三角形
         const delaunayNodeMap = new Map<string, DelaunayNode>();
         //最初のすべてを含む三角形
-        const hugaTriangle = Triangle.createIncludeRect(new Point(0, 0), new Point(600, 600));
+        const hugaTriangle = Triangle.createIncludeRect(new Point(0, 0), new Point(this.grid.length, this.grid[0].length));
         delaunayNodeMap.set(hugaTriangle.toString(), { triangle: hugaTriangle });
 
         for (let room of roomList) {
