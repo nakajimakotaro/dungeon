@@ -26,8 +26,8 @@ export class Enemy {
         this.move(this.angle);
     }
     canMove(angle: number): boolean {
-        let x = Math.cos(angle);
-        let y = Math.sin(angle) * -1;
+        let x = Math.round(Math.cos(angle));
+        let y = Math.round(Math.sin(angle)) * -1;
         if (!this.game.dungeon.isGridRange(this.pos.x + x, this.pos.y + y)) {
             return false;
         }
@@ -40,13 +40,13 @@ export class Enemy {
         if (!this.canMove(angle)) {
             return false;
         }
-        let x = Math.cos(angle);
-        let y = Math.sin(angle) * -1;
+        let x = Math.round(Math.cos(angle));
+        let y = Math.round(Math.sin(angle)) * -1;
         this.game.dungeon.grid[this.pos.x][this.pos.y].chara = null;
         this.pos.x += x;
         this.pos.y += y;
         this.game.dungeon.grid[this.pos.x][this.pos.y].chara = this;
-        return true;
+        return true
     }
     trun() {
         let angle = 0;
@@ -59,26 +59,21 @@ export class Enemy {
         } else if (this.canMove(this.angle + Math.PI + Math.PI / 2)) {
             angle = this.angle + Math.PI + Math.PI / 2;
         }
-        let isUpdate = false;
-        do {
-            if (Math.abs(angle) < 0.1) {
-                isUpdate = true;
-                this.angle = 0;
-            } else if (Math.abs(angle) - Math.PI / 2 < 0.1) {
-                isUpdate = true;
-                this.angle = Math.PI / 2;
-            } else if (Math.abs(angle) - Math.PI < 0.1) {
-                isUpdate = true;
-                this.angle = Math.PI;
-            } else if (Math.abs(angle) - (Math.PI + Math.PI / 2) < 0.1) {
-                isUpdate = true;
-                this.angle = Math.PI + Math.PI / 2;
-            }
-            if(angle > 0){
-                angle -= Math.PI * 2;
-            }else{
+        while (!(0 <= angle && angle < Math.PI * 2)) {
+            if (angle < 0) {
                 angle += Math.PI * 2;
+            } else {
+                angle -= Math.PI * 2;
             }
-        } while (!isUpdate);
+        }
+        if (Math.abs(angle) < 0.1) {
+            this.angle = 0;
+        } else if (Math.abs(angle) - Math.PI / 2 < 0.1) {
+            this.angle = Math.PI / 2;
+        } else if (Math.abs(angle) - Math.PI < 0.1) {
+            this.angle = Math.PI;
+        } else if (Math.abs(angle) - (Math.PI + Math.PI / 2) < 0.1) {
+            this.angle = Math.PI + Math.PI / 2;
+        }
     }
 }
