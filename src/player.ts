@@ -2,13 +2,12 @@ import { MysteryDungeon } from "./mysteryDungeon";
 import { Wall } from "./wall";
 import {Game} from "./game";
 import { Point } from "./shape";
+import {Character} from "./character";
 
-export class Player {
-    pos: Point;
+export class Player extends Character{
     constructor(public game:Game) {
+        super(game);
         this.pos = new Point(this.game.dungeon.roomList[0].centerX, this.game.dungeon.roomList[0].centerY);
-        document.addEventListener("keydown", (e) => {
-        });
     }
     update() {
         if(this.game.frame % 5 == 0){

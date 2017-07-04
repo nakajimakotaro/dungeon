@@ -3,6 +3,7 @@ import { Game } from "./game";
 import { Room } from "./room";
 import { Cell } from "./cell";
 import { PathWay } from "./pathway";
+import { Wall } from "./wall";
 
 export abstract class Dungeon {
     roomList: Room[];
@@ -21,5 +22,4 @@ export abstract class Dungeon {
     isGridRange(x:number, y:number){
         return x >= 0 && y >= 0 && x < this.grid.length && y < this.grid[0].length;
     }
-    
 }

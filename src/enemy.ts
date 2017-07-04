@@ -2,6 +2,7 @@ import { Dungeon } from "./dungeon";
 import { Wall } from "./wall";
 import { Game } from "./game";
 import { Point } from "./shape";
+import { Character } from "./character";
 
 function rangeRandom(min: number, max: number): number {
     return Math.random() * (max - min) + min;
@@ -9,12 +10,12 @@ function rangeRandom(min: number, max: number): number {
 function rangeRandomInt(min: number, max: number): number {
     return Math.floor(rangeRandom(min, max));
 }
-export class Enemy {
-    pos: Point;
+export class Enemy extends Character {
     angle: number = 0;
     territoryPin: Point;
     territoryRange: number;
     constructor(public game: Game, idx) {
+        super(game);
         this.pos = new Point(this.game.dungeon.roomList[idx].centerX, this.game.dungeon.roomList[idx].centerY);
         this.territoryPin = new Point(this.game.dungeon.roomList[idx].centerX, this.game.dungeon.roomList[idx].centerY);
         this.territoryRange = 5;
@@ -29,17 +30,17 @@ export class Enemy {
             .beginFill(0x00ff00)
             .drawRect(this.pos.x * this.game.dungeon.cellSize, this.pos.y * this.game.dungeon.cellSize, this.game.dungeon.cellSize, this.game.dungeon.cellSize);
     }
-    isInTerritory(w: number, h: number) {
-        return Math.hypot(w, h) < this.territoryRange;
-    }
     walk() {
+        const isInTerritory = (w: number, h: number) => {
+            return Math.hypot(w, h) < this.territoryRange;
+        }
         let tryAngle: number;
         //縄張りの中からはみ出さないようランダムに向きを決める
         do {
             tryAngle = this.trun([0, Math.PI / 2, Math.PI, Math.PI + Math.PI / 2][rangeRandomInt(0, 4)]);
         } while (
-            !this.isInTerritory(
-                this.pos.x + Math.round(Math.cos(tryAngle)) -      this.territoryPin.x,
+            !isInTerritory(
+                this.pos.x + Math.round(Math.cos(tryAngle)) - this.territoryPin.x,
                 this.pos.y + Math.round(Math.sin(tryAngle)) * -1 - this.territoryPin.y)
         );
         this.angle = tryAngle;
