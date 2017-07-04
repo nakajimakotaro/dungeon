@@ -2,7 +2,7 @@ import "pixi.js";
 import { Wall } from "./wall";
 import { Triangle, Circle, Point } from "./shape";
 import { Room } from "./room";
-import { Dungeon } from "./dungeon";
+import { GameMap } from "./gameMap";
 import { Cell } from "./cell";
 import { Game } from "./game";
 
@@ -14,7 +14,7 @@ class Edge<T>{
 
 export class PathWay extends Edge<Room> {
     grid: Cell[][];
-    constructor(private dungeon: Dungeon, pair1: Room, pair2: Room) {
+    constructor(private dungeon: GameMap, pair1: Room, pair2: Room) {
         super(pair1, pair2, Math.hypot(pair1.pos.x - pair2.pos.x, pair1.pos.y - pair2.pos.y));
     }
 
@@ -36,7 +36,7 @@ export class PathWay extends Edge<Room> {
                 }
             }
         }
-        function createWay(dungeon: Dungeon, pathWay: PathWay, room1: Room, room2: Room, x: number = room1.centerX, y: number = room1.centerY) {
+        function createWay(dungeon: GameMap, pathWay: PathWay, room1: Room, room2: Room, x: number = room1.centerX, y: number = room1.centerY) {
             const direction = selectDirection(room1, room2, x, y);
             while (true) {
                 if (dungeon.grid[x][y].belong instanceof Wall) {

@@ -1,7 +1,7 @@
 import "pixi.js";
 import { Triangle, Circle, Point } from "./shape";
 import { Room } from "./room";
-import { Dungeon } from "./dungeon";
+import { GameMap } from "./gameMap";
 import { PathWay } from "./pathway";
 import { Cell } from "./cell";
 import { Game } from "./game";
@@ -27,8 +27,7 @@ type RoomCreateConfig = {
     volume: number, //作成する数
 }
 
-export class MysteryDungeon extends Dungeon {
-    cellSize:number;
+export class MysteryDungeon extends GameMap {
     constructor(public game: Game) {
         super(game);
         this.cellSize = 10;

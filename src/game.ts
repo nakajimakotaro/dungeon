@@ -3,6 +3,7 @@ import Stats = require("stats.js");
 import { Triangle, Circle, Point } from "./shape";
 import { Room } from "./room";
 import { MysteryDungeon } from "./mysteryDungeon";
+import { GameMap } from "./gameMap";
 import { Player } from "./player";
 import { Enemy } from "./enemy";
 import { InputManager } from "./inputManager";
@@ -11,13 +12,12 @@ export class Game{
     stats:Stats;
     pixi: PIXI.Application;
     render: PIXI.Graphics;
-    dungeon: MysteryDungeon;
+    map: GameMap;
     player: Player;
     enemyList: Enemy[];
     inputManager:InputManager;
     frame = 0;
     constructor() {
-        console.log(Stats)
         this.stats = new Stats();
         document.body.appendChild(this.stats.dom);
         this.pixi = new PIXI.Application(600, 600);
@@ -26,7 +26,7 @@ export class Game{
         this.pixi.stage.addChild(this.render);
 
         this.inputManager = new InputManager(this);
-        this.dungeon = new MysteryDungeon(this);
+        this.map = new MysteryDungeon(this);
 
         this.player = new Player(this);
         this.enemyList = new Array(5).fill(0).map((e, i)=>new Enemy(this, i));
@@ -42,7 +42,7 @@ export class Game{
 
         //draw
         this.render.clear();
-        this.dungeon.draw(this.render);
+        this.map.draw(this.render);
         this.player.draw(this.render);
         this.enemyList.forEach(e=>e.draw(this.render));
         this.frame++;
