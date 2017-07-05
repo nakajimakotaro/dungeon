@@ -10,7 +10,7 @@ function rangeRandomInt(min: number, max: number): number {
 }
 function shuffle<T>(array: Array<T>) {
     for (let a = 0; a < array.length - 1; a++) {
-        let b = rangeRandomInt(a + 1, array.length - 1);
+        let b = rangeRandomInt(a, array.length);
         let tmp = array[a];
         array[a] = array[b];
         array[b] = tmp;
@@ -31,8 +31,8 @@ export class TerritoryAI implements AI {
             this.walk();
         }
     }
-    isInTerritory(w: number, h: number) {
-        return Math.hypot(w, h) < this.territoryRange;
+    isInTerritory(x: number, y: number) {
+        return Math.hypot(x - this.territoryPin.x, y - this.territoryPin.y) < this.territoryRange;
     }
     walk() {
         let angle: number | null = null;
@@ -40,9 +40,7 @@ export class TerritoryAI implements AI {
         for (let tryAngle of shuffle([0, Math.PI / 2, Math.PI, Math.PI + Math.PI / 2])) {
             let tryMoveX = this.chara.pos.x + Math.round(Math.cos(tryAngle));
             let tryMoveY = this.chara.pos.y + Math.round(Math.sin(tryAngle)) * -1;
-            if (this.isInTerritory(
-                tryMoveX - this.territoryPin.x,
-                tryMoveY - this.territoryPin.y) &&
+            if (this.isInTerritory( tryMoveX, tryMoveY) &&
                 this.chara.canMoveTo(tryMoveX, tryMoveY)) {
                 angle = tryAngle;
                 break;

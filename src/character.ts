@@ -2,7 +2,7 @@ import { Game } from "./game";
 import { Cell } from "./cell";
 import { Wall } from "./wall";
 import { Point } from "./shape";
-import { AI} from "./ai";
+import { AI} from "./AI";
 
 export class Character {
     hp: number;
