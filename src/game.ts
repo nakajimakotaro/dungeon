@@ -4,8 +4,9 @@ import { Triangle, Circle, Point } from "./shape";
 import { Room } from "./room";
 import { MysteryDungeon } from "./mysteryDungeon";
 import { GameMap } from "./gameMap";
+import { AI, TerritoryAI, PlayerCntrol } from "./AI";
 import { Player } from "./player";
-import { Enemy } from "./enemy";
+import { Character} from "./character";
 import { InputManager } from "./inputManager";
 
 export class Game{
@@ -13,8 +14,7 @@ export class Game{
     pixi: PIXI.Application;
     render: PIXI.Graphics;
     map: GameMap;
-    player: Player;
-    enemyList: Enemy[];
+    charaList:Character[] = [];
     inputManager:InputManager;
     frame = 0;
     constructor() {
@@ -28,8 +28,18 @@ export class Game{
         this.inputManager = new InputManager(this);
         this.map = new MysteryDungeon(this);
 
-        this.player = new Player(this);
-        this.enemyList = new Array(5).fill(0).map((e, i)=>new Enemy(this, i));
+        let player = new Character(this);
+        player.ai = new PlayerCntrol(this, player);
+        player.addMap(this.map.roomList[0].centerX, this.map.roomList[0].centerY + 1, 0);
+        player.color = 0xff0000;
+        this.charaList.push(player);
+        this.charaList.push(...new Array(5).fill(0).map((e, i)=>{
+            let enemy = new Character(this);
+            enemy.addMap(this.map.roomList[i].centerX, this.map.roomList[i].centerY, 0);
+            enemy.ai = new TerritoryAI(this, enemy, enemy.pos.x, enemy.pos.y, 5);
+            enemy.color = 0x00ff00;
+            return enemy;
+        }));
     }
     start() {
         setInterval(() => this.loop(), this.nextFrameTime());
@@ -37,14 +47,12 @@ export class Game{
     loop() {
         this.stats.begin();
         //update
-        this.player.update();
-        this.enemyList.forEach(e=>e.update());
+        this.charaList.forEach(e=>e.update());
 
         //draw
         this.render.clear();
         this.map.draw(this.render);
-        this.player.draw(this.render);
-        this.enemyList.forEach(e=>e.draw(this.render));
+        this.charaList.forEach(e=>e.draw(this.render));
         this.frame++;
         this.stats.end();
     }

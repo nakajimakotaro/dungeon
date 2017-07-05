@@ -2,16 +2,29 @@ import { Game } from "./game";
 import { Cell } from "./cell";
 import { Wall } from "./wall";
 import { Point } from "./shape";
+import { AI} from "./ai";
 
-export abstract class Character {
-    hp:number;
+export class Character {
+    hp: number;
     pos: Point;
-    angle:number;
+    angle: number;
+    ai:AI|null;
+    color:number;
     constructor(public game: Game) {
     }
-    addMap(x, y, angle){
+    update(){
+        if(this.ai && this.pos && this.angle != undefined){
+            this.ai.update();
+        }
+    }
+    addMap(x, y, angle) {
         this.pos = new Point(x, y);
         this.angle = angle;
+    }
+    draw(render: PIXI.Graphics) {
+        render
+            .beginFill(this.color)
+            .drawRect(this.pos.x * this.game.map.cellSize, this.pos.y * this.game.map.cellSize, this.game.map.cellSize, this.game.map.cellSize);
     }
     canMoveTo(x: number, y: number): boolean {
         if (!this.game.map.isGridRange(x, y)) {
@@ -37,24 +50,39 @@ export abstract class Character {
         this.game.map.grid[this.pos.x][this.pos.y].chara = this;
         return true;
     }
-    trun(angle: number) {
+    globalAngle(angle: number = 0) {
         let globalAngle = this.angle + angle;
-        while (!(0 <= globalAngle && globalAngle < Math.PI * 2)) {
-            if (globalAngle < 0) {
-                globalAngle += Math.PI * 2;
+        return this.normalizeAngle(globalAngle);
+    }
+    normalizeAngle(angle: number) {
+        let normalizeAngle: number = angle;
+        while (!(0 <= normalizeAngle && normalizeAngle < Math.PI * 2)) {
+            if (normalizeAngle < 0) {
+                normalizeAngle += Math.PI * 2;
             } else {
-                globalAngle -= Math.PI * 2;
+                normalizeAngle -= Math.PI * 2;
             }
         }
-        if (Math.abs(globalAngle) < 0.1) {
-            globalAngle = 0;
-        } else if (Math.abs(globalAngle) - Math.PI / 2 < 0.1) {
-            globalAngle = Math.PI / 2;
-        } else if (Math.abs(globalAngle) - Math.PI < 0.1) {
-            globalAngle = Math.PI;
-        } else if (Math.abs(globalAngle) - (Math.PI + Math.PI / 2) < 0.1) {
-            globalAngle = Math.PI + Math.PI / 2;
+        return normalizeAngle;
+    }
+    matchAngleLineUp(angle: number): number {
+        let normalizeAngle = this.normalizeAngle(angle);
+        const direction = Math.min(
+            Math.abs(normalizeAngle),
+            Math.abs(normalizeAngle - Math.PI / 2),
+            Math.abs(normalizeAngle - Math.PI),
+            Math.abs(normalizeAngle - (Math.PI + Math.PI / 2)));
+        if (Math.abs(normalizeAngle) == direction) {
+            normalizeAngle = 0;
+        } else if (Math.abs(normalizeAngle - Math.PI / 2) == direction) {
+            normalizeAngle = Math.PI / 2;
+        } else if (Math.abs(normalizeAngle - Math.PI) == direction) {
+            normalizeAngle = Math.PI;
+        } else if (Math.abs(normalizeAngle - (Math.PI + Math.PI / 2)) == direction) {
+            normalizeAngle = Math.PI + Math.PI / 2;
+        } else {
+            throw new Error("Error");
         }
-        return globalAngle;
+        return normalizeAngle;
     }
 }
