@@ -37,7 +37,6 @@ export class TerritoryAI implements AI {
     walk() {
         let angle: number | null = null;
         //縄張りの中からはみ出さないようランダムに向きを決める
-        ;
         for (let tryAngle of shuffle([0, Math.PI / 2, Math.PI, Math.PI + Math.PI / 2])) {
             let tryMoveX = this.chara.pos.x + Math.round(Math.cos(tryAngle));
             let tryMoveY = this.chara.pos.y + Math.round(Math.sin(tryAngle)) * -1;
