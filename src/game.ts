@@ -5,7 +5,6 @@ import { Room } from "./room";
 import { MysteryDungeon } from "./mysteryDungeon";
 import { GameMap } from "./gameMap";
 import { AI, TerritoryAI, PlayerCntrol } from "./AI";
-import { Player } from "./player";
 import { Character} from "./character";
 import { InputManager } from "./inputManager";
 
