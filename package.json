@@ -5,10 +5,12 @@
   "author": "nakajimakotaro <harusann2@gmail.com>",
   "license": "MIT",
   "dependencies": {
+    "json5": "^0.5.1",
     "pixi.js": "^4.5.2",
     "stats.js": "^0.17.0"
   },
   "devDependencies": {
+    "@types/json5": "^0.0.29",
     "@types/pixi.js": "^4.4.4",
     "copy-webpack-plugin": "^4.0.1",
     "ts-loader": "^2.1.0",
