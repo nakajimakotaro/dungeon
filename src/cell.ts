@@ -8,7 +8,7 @@ export class Cell {
     constructor(
         public x: number,
         public y: number,
-        public gridSize: number,
+        public size: number,
         public belong: Room | PathWay | Wall,
         public items: Item[] = [],
         public chara: Character | null = null,
@@ -17,6 +17,6 @@ export class Cell {
     draw(render: PIXI.Graphics) {
         render
             .beginFill(this.color)
-            .drawRect(this.x * this.gridSize, this.y * this.gridSize, this.gridSize, this.gridSize);
+            .drawRect(this.x * this.size, this.y * this.size, this.size, this.size);
     }
 }

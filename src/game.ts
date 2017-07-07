@@ -26,19 +26,6 @@ export class Game{
 
         this.inputManager = new InputManager(this);
         this.map = new MysteryDungeon(this);
-
-        let player = new Character(this);
-        player.ai = new PlayerCntrol(this, player);
-        player.addMap(this.map.roomList[0].centerX, this.map.roomList[0].centerY + 1, 0);
-        player.color = 0xff0000;
-        this.charaList.push(player);
-        this.charaList.push(...new Array(5).fill(0).map((e, i)=>{
-            let enemy = new Character(this);
-            enemy.addMap(this.map.roomList[i].centerX, this.map.roomList[i].centerY, 0);
-            enemy.ai = new TerritoryAI(this, enemy, enemy.pos.x, enemy.pos.y, 5);
-            enemy.color = 0x00ff00;
-            return enemy;
-        }));
     }
     start() {
         setInterval(() => this.loop(), this.nextFrameTime());

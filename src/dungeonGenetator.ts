@@ -2,6 +2,7 @@ import "pixi.js";
 import { Triangle, Circle, Point } from "./shape";
 import { Room } from "./room";
 import { GameMap } from "./gameMap";
+import { Dungeon } from "./dungeon";
 import { PathWay } from "./pathway";
 import { Cell } from "./cell";
 import { Game } from "./game";
@@ -16,49 +17,64 @@ function rangeRandomInt(min: number, max: number): number {
 function range(range: number) {
     return new Array(range).fill(0).map((e, i) => i);
 }
-type RoomCreateConfig = {
-    minWidthNum: number,
-    minHeightNum: number,
-    maxWidthNum: number,
-    maxHeightNum: number,
-    maxRangeNumX: number,
-    maxRangeNumY: number,
-    cellSize: number,
+type RoomGenerateParameter = {
+    minWidth: number,
+    minHeight: number,
+    maxWidth: number,
+    maxHeight: number,
     volume: number, //作成する数
 }
+type CharacterGenerateParameter = {
+}
+type MysteryDungeonParameter = {
+    room: RoomGenerateParameter,
+    character: CharacterGenerateParameter,
+    cellSize: number,
+    rangeX: number,
+    rangeY: number,
+}
 
-export class MysteryDungeon extends GameMap {
-    constructor(public game: Game) {
-        super(game);
-        this.cellSize = 10;
-        const roomCreateConfig = {
-            minWidthNum: 4,
-            minHeightNum: 4,
-            maxWidthNum: 10,
-            maxHeightNum: 10,
-            maxRangeNumX: 60,
-            maxRangeNumY: 60,
-            cellSize: 10,
+export class DungeonGenerator {
+    static generate(game: Game, parameter: MysteryDungeonParameter) {
+        const room: RoomGenerateParameter = {
+            minWidth: 4,
+            minHeight: 4,
+            maxWidth: 10,
+            maxHeight: 10,
             volume: 10, //作成する数
+        };
+        const character: CharacterGenerateParameter = {
+
         }
-        this.grid = range(roomCreateConfig.maxRangeNumX).map((e, x) => range(roomCreateConfig.maxRangeNumY).map((e, y) =>
+        const mysteryDungeonParameter: MysteryDungeonParameter = {
+            room,
+            character,
+            cellSize: 10,
+            rangeX: 10,
+            rangeY: 10,
+        }
+        let maxRangeX = 60;
+        let maxRangeY = 60;
+        let cellSize = 10;
+        const grid = range(maxRangeX).map((e, x) => range(maxRangeY).map((e, y) =>
             new Cell(
                 x,
                 y,
-                roomCreateConfig.cellSize,
+                cellSize,
                 wall,
             )));
-        this.roomList = this.generateRoom(roomCreateConfig);
-        this.pathWay = this.generatePathWay(this.roomList);
+        const roomList = DungeonGenerator.generateRoom(mysteryDungeonParameter);
+        const pathWay = DungeonGenerator.generatePathWay(mysteryDungeonParameter, roomList);
+        const dungeon = new Dungeon(game, grid, roomList, pathWay);
     }
-    generateRoom(roomCreateConfig:RoomCreateConfig) {
-        let roomList = this.createRoomList(roomCreateConfig);
-        this.adjustRoom(roomCreateConfig, roomList);
+    private static generateRoom(mysteryDungeonParameter: MysteryDungeonParameter) {
+        let roomList = this.createRoomList(mysteryDungeonParameter);
+        this.adjustRoom(mysteryDungeonParameter, roomList);
         roomList.forEach(e => e.setGrid());
         return roomList;
     }
     //かぶっている部屋をずらす
-    adjustRoom(config: RoomCreateConfig, roomList: Room[]) {
+    private static adjustRoom(parameter: MysteryDungeonParameter, roomList: Room[]) {
         function collitionRect(a: Room, b: Room) {
             let collisionRect = { x: 0, y: 0, w: 0, h: 0 };
             collisionRect.x = Math.max(a.startX, b.startX);
@@ -85,7 +101,7 @@ export class MysteryDungeon extends GameMap {
             collisionRect.h = (tempB.startY + tempB.height) - tempA.startY;
             return collisionRect;
         }
-        let collisionFlag = false;
+        let collisionFlag: boolean;
         do {
             collisionFlag = false;
             for (let x = 0; x < roomList.length; x++) {
@@ -95,44 +111,58 @@ export class MysteryDungeon extends GameMap {
                     let rect = collitionRect(a, b);
                     if (rect.h > 0 && rect.w > 0) {
                         collisionFlag = true;
-                        a.startX = rangeRandomInt(0, config.maxRangeNumX - a.width);
-                        a.startY = rangeRandomInt(0, config.maxRangeNumY - a.height);
+                        a.startX = rangeRandomInt(0, parameter.rangeX - a.width);
+                        a.startY = rangeRandomInt(0, parameter.rangeY - a.height);
                     }
                 }
             }
         } while (collisionFlag);
     }
-    createRoom(config: RoomCreateConfig): Room {
-        const widthNum = rangeRandomInt(config.minWidthNum, config.maxWidthNum);
-        const heightNum = rangeRandomInt(config.minHeightNum, config.maxHeightNum);
-        const startX = rangeRandomInt(0, config.maxRangeNumX - widthNum);
-        const startY = rangeRandomInt(0, config.maxRangeNumY - heightNum);
+    private static createRoom(parameter: MysteryDungeonParameter): Room {
+        const width = rangeRandomInt(parameter.room.minWidth, parameter.room.maxWidth);
+        const height = rangeRandomInt(parameter.room.minHeight, parameter.room.maxHeight);
+        const startX = rangeRandomInt(0, parameter.rangeX - width);
+        const startY = rangeRandomInt(0, parameter.rangeY - height);
         return new Room(
             this,
             startX,
             startY,
-            widthNum,
-            heightNum,
+            width,
+            height,
         );
     }
 
 
-    createRoomList(config: RoomCreateConfig): Room[] {
+    private static createRoomList(parameter: MysteryDungeonParameter): Room[] {
         let list: Room[] = [];
-        for (let count of range(config.volume)) {
-            list.push(this.createRoom(config));
+        for (let count of range(parameter.room.volume)) {
+            list.push(DungeonGenerator.createRoom(parameter));
         }
         return list;
     }
-    generatePathWay(roomList:Room[]){
-        const nearAllPathWay = this.nearConnect(roomList);
-        const minimumPathWay = this.minimumSpanningList(nearAllPathWay);
+    private static generatePathWay(parameter: MysteryDungeonParameter, dungeon, roomList: Room[]) {
+        const nearAllPathWay = DungeonGenerator.createPathWay(dungeon, DungeonGenerator.nearRoomTriangleList(parameter, roomList));
+        const minimumPathWay = DungeonGenerator.minimumSpanningList(nearAllPathWay);
         minimumPathWay.forEach(e => e.setGrid());
         return minimumPathWay;
     }
+    private static createPathWay(dungeon:Dungeon, nearRoomTriangleList: { room1: Room, room2: Room, room3: Room }[])PathWay[]{
+        const roomPairList: PathWay[] = [];
+        for (let nearRoomTriangle of nearRoomTriangleList) {
+            const roomPair1 = new PathWay(dungeon, nearRoomTriangle.room1, nearRoomTriangle.room2)
+            roomPairList.push(roomPair1);
+
+            const roomPair2 = new PathWay(dungeon, nearRoomTriangle.room2, nearRoomTriangle.room3)
+            roomPairList.push(roomPair2);
+
+            const roomPair3 = new PathWay(dungeon, nearRoomTriangle.room3, nearRoomTriangle.room1)
+            roomPairList.push(roomPair3);
+        }
+        return roomPairList;
+    }
     //近い部屋同士をつなげる
     //ドロネー三角形分割している
-    nearConnect(roomList: Room[]) {
+    private static nearRoomTriangleList(parameter: MysteryDungeonParameter, roomList: Room[]): { room1: Room, room2: Room, room3: Room }[] {
         type DelaunayNode = {
             triangle: Triangle,
             room1?: Room;
@@ -142,7 +172,7 @@ export class MysteryDungeon extends GameMap {
         //分割した三角形
         const delaunayNodeMap = new Map<string, DelaunayNode>();
         //最初のすべてを含む三角形
-        const hugaTriangle = Triangle.createIncludeRect(new Point(0, 0), new Point(this.grid.length, this.grid[0].length));
+        const hugaTriangle = Triangle.createIncludeRect(new Point(0, 0), new Point(parameter.rangeX, parameter.rangeY));
         delaunayNodeMap.set(hugaTriangle.toString(), { triangle: hugaTriangle });
 
         for (let room of roomList) {
@@ -204,24 +234,20 @@ export class MysteryDungeon extends GameMap {
                 delaunayNodeMap.delete(delaunayNode.triangle.toString());
             }
         }
-
-        const roomPairList: PathWay[] = [];
+        const nearRoomTriangleList: { room1: Room, room2: Room, room3: Room }[] = [];
         for (let delaunayNode of delaunayNodeMap.values()) {
             if (delaunayNode.room1 == null || delaunayNode.room2 == null || delaunayNode.room3 == null) {
                 throw new Error();
             }
-            const roomPair1 = new PathWay(this, delaunayNode.room1, delaunayNode.room2)
-            roomPairList.push(roomPair1);
-
-            const roomPair2 = new PathWay(this, delaunayNode.room2, delaunayNode.room3)
-            roomPairList.push(roomPair2);
-
-            const roomPair3 = new PathWay(this, delaunayNode.room3, delaunayNode.room1)
-            roomPairList.push(roomPair3);
+            nearRoomTriangleList.push({
+                room1: delaunayNode.room1,
+                room2: delaunayNode.room2,
+                room3: delaunayNode.room3,
+            });
         }
-        return roomPairList;
+        return nearRoomTriangleList;
     }
-    minimumSpanningList(edgeList: PathWay[]): PathWay[] {
+    private static minimumSpanningList(edgeList: PathWay[]): PathWay[] {
         class DisjointSet<T> {
             node: T;
             childList: DisjointSet<T>[] = [];

@@ -1,5 +1,5 @@
 import { Point } from "./shape";
-import { MysteryDungeon } from "./mysteryDungeon";
+import { D } from "./dungeonGenerator";
 import { Cell } from "./cell";
 export class Room {
     get grid() {

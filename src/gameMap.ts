@@ -7,12 +7,17 @@ import { PathWay } from "./pathway";
 import { Wall } from "./wall";
 
 export abstract class GameMap {
-    roomList: Room[];
-    pathWay: PathWay[];
-    grid: Cell[][];
-    gridSize: number;
-    cellSize:number;
-    constructor(public game:Game) {
+    get gridSizeX(){
+        return this.grid.length;
+    }
+    get gridSizeY(){
+        return this.grid[0].length;
+    }
+    get cellSize(){
+        return this.grid[0][0].size;
+    }
+
+    constructor(public game:Game, public grid:Cell[][]) {
     }
     draw(render: PIXI.Graphics) {
         for (let yGrid of this.grid) {
