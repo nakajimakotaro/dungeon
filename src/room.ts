@@ -1,7 +1,9 @@
 import { Point } from "./shape";
-import { D } from "./dungeonGenerator";
+import { Dungeon } from "./dungeon";
+import { DungeonGenerator } from "./dungeonGenerator";
 import { Cell } from "./cell";
 export class Room {
+    dungeon:Dungeon;
     get grid() {
         return this.getAreaGrid(this.startX, this.startY, this.width, this.height);
     }
@@ -15,7 +17,7 @@ export class Room {
     get centerY() {
         return this.startY + Math.floor(this.height / 2);
     }
-    constructor(protected dungeon: MysteryDungeon, public startX: number, public startY: number, public width: number, public height: number) {
+    constructor(public startX: number, public startY: number, public width: number, public height: number) {
     }
     setGrid() {
         for (let yGrid of this.grid) {

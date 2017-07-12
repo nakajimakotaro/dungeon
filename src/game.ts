@@ -2,7 +2,7 @@ import "pixi.js";
 import Stats = require("stats.js");
 import { Triangle, Circle, Point } from "./shape";
 import { Room } from "./room";
-import { MysteryDungeon } from "./mysteryDungeon";
+import {MapGenerater} from "./mapGenerater";
 import { GameMap } from "./gameMap";
 import { AI, TerritoryAI, PlayerCntrol } from "./AI";
 import { Character} from "./character";
@@ -23,9 +23,10 @@ export class Game{
         document.body.appendChild(this.pixi.view);
         this.render = new PIXI.Graphics();
         this.pixi.stage.addChild(this.render);
-
         this.inputManager = new InputManager(this);
-        this.map = new MysteryDungeon(this);
+    }
+    async load(mapPath){
+        this.map = await MapGenerater.generate(this, mapPath);
     }
     start() {
         setInterval(() => this.loop(), this.nextFrameTime());
