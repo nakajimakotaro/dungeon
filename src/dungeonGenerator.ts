@@ -25,6 +25,7 @@ export type RoomGenerateParameter = {
     volume: number, //作成する数
 }
 export type MysteryDungeonParameter = {
+    kind: "MysteryDungeon";
     room: RoomGenerateParameter,
     cellSize: number,
     cellNumX: number;

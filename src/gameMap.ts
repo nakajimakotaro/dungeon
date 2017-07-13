@@ -6,7 +6,7 @@ import { Cell } from "./cell";
 import { PathWay } from "./pathway";
 import { Wall } from "./wall";
 
-export abstract class GameMap {
+export class GameMap {
     get gridSizeX(){
         return this.grid.length;
     }
