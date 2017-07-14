@@ -2,18 +2,17 @@ import { Game } from "./game";
 import { Cell } from "./cell";
 import { Wall } from "./wall";
 import { Point } from "./shape";
-import { AI} from "./AI";
+import { AI } from "./AI";
 
+export type CharacterInfo = {
+
+}
 export class Character {
-    hp: number;
-    pos: Point;
-    angle: number;
-    ai:AI|null;
-    color:number;
-    constructor(public game: Game) {
+    public ai: AI;
+    constructor(public game: Game, public hp: number, public pos: Point, public angle: number, public color: number) {
     }
-    update(){
-        if(this.ai && this.pos && this.angle != undefined){
+    update() {
+        if (this.ai && this.pos && this.angle != undefined) {
             this.ai.update();
         }
     }

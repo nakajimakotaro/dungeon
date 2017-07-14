@@ -1,6 +1,5 @@
 import { Point } from "./shape";
 import { Dungeon } from "./dungeon";
-import { DungeonGenerator } from "./dungeonGenerator";
 import { Cell } from "./cell";
 export class Room {
     dungeon:Dungeon;

@@ -10,7 +10,7 @@ import { wall } from "./wall";
 export class Dungeon extends GameMap {
     roomList:Room[];
     pathWayList: PathWay[];
-    constructor(public game: Game, public grid: Cell[][]) {
+    constructor(public game: Game, public grid: Cell[][], public level) {
         super(game, grid);
     }
 

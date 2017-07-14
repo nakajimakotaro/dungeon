@@ -2,9 +2,9 @@ import "pixi.js";
 import Stats = require("stats.js");
 import { Triangle, Circle, Point } from "./shape";
 import { Room } from "./room";
-import {MapGenerater} from "./mapGenerater";
+import {MapGenerater} from "./MapGenerater";
 import { GameMap } from "./gameMap";
-import { AI, TerritoryAI, PlayerCntrol } from "./AI";
+import { AI} from "./AI";
 import { Character} from "./character";
 import { InputManager } from "./inputManager";
 
@@ -13,7 +13,6 @@ export class Game{
     pixi: PIXI.Application;
     render: PIXI.Graphics;
     map: GameMap;
-    charaList:Character[] = [];
     inputManager:InputManager;
     frame = 0;
     constructor() {
@@ -34,12 +33,11 @@ export class Game{
     loop() {
         this.stats.begin();
         //update
-        this.charaList.forEach(e=>e.update());
+        this.map.update();
 
         //draw
         this.render.clear();
         this.map.draw(this.render);
-        this.charaList.forEach(e=>e.draw(this.render));
         this.frame++;
         this.stats.end();
     }

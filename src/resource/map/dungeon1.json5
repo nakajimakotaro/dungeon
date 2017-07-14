@@ -1,0 +1,20 @@
+{
+    map:{
+        kind: "MysteryDungeon",
+        level: 2,
+        room:{
+            minWidth: 4,
+            minHeight: 4,
+            maxWidth: 10,
+            maxHeight: 10,
+            volume: 10,
+        },
+        cellSize: 10,
+        cellNumX: 60,
+        cellNumY: 60,
+    },
+    character:{
+            list: ["enemy"],
+            volume: 10,
+        },
+}

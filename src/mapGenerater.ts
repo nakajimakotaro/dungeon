@@ -1,8 +1,8 @@
 import { Game } from "./game";
 import { GameMap } from "./gameMap";
 import json5 = require("json5");
-import { CharacterGenerator, CharacterGenerateParameter } from "./characterGenerator";
-import { DungeonGenerator, MysteryDungeonParameter } from "./dungeonGenerator";
+import { Character} from "./character";
+import { DungeonGenerater, MysteryDungeonParameter, CharacterGenerater } from "./dungeonGenerator";
 import { Dungeon} from "./dungeon";
 
 type ManualMapParameter = {
@@ -10,15 +10,28 @@ type ManualMapParameter = {
 }
 class ManualMap{
     static generate(game: Game, parameter: ManualMapParameter): GameMap{
+        //TODO未動作
         return new GameMap(game, [[]]);
     }
 }
 
-type MapParameter = MysteryDungeonParameter|ManualMapParameter;
+export type MapParameter = {
+    map: MysteryDungeonParameter;
+    character: {
+        list: string[],
+        volume: number,
+    }
+};
 
 export class MapGenerater {
     static async generate(game: Game, parameterPath: string){
-        const mapParameter = json5.parse(
+        const levelParameter = await MapGenerater.getMapParameter(parameterPath);
+        const dungeon = MapGenerater.map(game, levelParameter);
+        dungeon.charaList = await CharacterGenerater.generate(game, dungeon, levelParameter.character);
+        return dungeon;
+    }
+    static async getMapParameter(parameterPath:string){
+        return json5.parse(
             await new Promise((resolve) => {
                 const require = new XMLHttpRequest();
                 require.open("GET", parameterPath);
@@ -26,12 +39,14 @@ export class MapGenerater {
                     resolve(require.responseText);
                 });
                 require.send();
-            })
+            }) as string
         ) as MapParameter;
-        if(mapParameter.kind == "MysteryDungeon"){
-            return DungeonGenerator.generate(game, mapParameter);
+    }
+    static map(game:Game, levelParameter:MapParameter){
+        if(levelParameter.map.kind == "MysteryDungeon"){
+            return DungeonGenerater.generate(game, levelParameter.map);
         }else{
-            return DungeonGenerator.generate(game, mapParameter);
+            return DungeonGenerater.generate(game, levelParameter.map);
         }
     }
 }

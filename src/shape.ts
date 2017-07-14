@@ -9,6 +9,9 @@ export class Point {
             Math.abs(this.y - point.y) < 0.001
         );
     }
+    clone(){
+        return new Point(this.x, this.y);
+    }
 }
 export class Circle {
     constructor(public center: Point, public r: number) {

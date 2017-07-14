@@ -1,0 +1,9 @@
+{
+    name: "enemy",
+    color: 0xff00ff,
+    baseHp: 10,
+    defaultAI: {
+        name: "TerritoryAI",
+        range: 5,
+    }
+}

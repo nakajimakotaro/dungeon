@@ -7,6 +7,7 @@ import { PathWay } from "./pathway";
 import { Wall } from "./wall";
 
 export class GameMap {
+    charaList:Character[] = [];
     get gridSizeX(){
         return this.grid.length;
     }
@@ -25,6 +26,11 @@ export class GameMap {
                 cell.draw(render);
             }
         }
+        this.charaList.forEach(e=>e.draw(render));
+    }
+    update(){
+
+        this.charaList.forEach(e=>e.update());
     }
     isGridRange(x:number, y:number){
         return x >= 0 && y >= 0 && x < this.grid.length && y < this.grid[0].length;

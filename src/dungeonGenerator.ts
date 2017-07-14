@@ -1,8 +1,11 @@
 import "pixi.js";
+import json5 = require("json5");
 import { Triangle, Circle, Point } from "./shape";
 import { Room } from "./room";
 import { GameMap } from "./gameMap";
 import { Dungeon } from "./dungeon";
+import { Character } from "./character";
+import { AI, AIParameter } from "./AI";
 import { PathWay } from "./pathway";
 import { Cell } from "./cell";
 import { Game } from "./game";
@@ -17,6 +20,12 @@ function rangeRandomInt(min: number, max: number): number {
 function range(range: number) {
     return new Array(range).fill(0).map((e, i) => i);
 }
+function randomSelectArray<T>(array: Array<T>) {
+    return array[rangeRandomInt(0, array.length)];
+}
+function randomSelect<T, K>(map: Map<T, K>) {
+    return map.get(map.keys[rangeRandomInt(0, map.size)]);
+}
 export type RoomGenerateParameter = {
     minWidth: number,
     minHeight: number,
@@ -26,6 +35,7 @@ export type RoomGenerateParameter = {
 }
 export type MysteryDungeonParameter = {
     kind: "MysteryDungeon";
+    level: number,
     room: RoomGenerateParameter,
     cellSize: number,
     cellNumX: number;
@@ -36,8 +46,48 @@ type ConnectRoomList = {
     room2: Room,
 }
 
-export class DungeonGenerator {
-    static generate(game: Game, parameter: MysteryDungeonParameter): Dungeon{
+type GenerateCharacterParameter = {
+    list: string[],
+    volume: number,
+}
+
+type CharacterInfo = {
+    name: string;
+    color: number;
+    baseHp: number;
+    defaultAI: AIParameter;
+}
+
+const characterList: Map<string, string> = new Map();
+characterList.set("enemy", "resource/character/enemy.json5");
+
+export class CharacterGenerater {
+    static generate(game: Game, dungeon:Dungeon, parameter: GenerateCharacterParameter) {
+        const charaPromiseList:Promise<Character>[] = [];
+        for (let count of range(parameter.volume)) {
+            charaPromiseList.push(CharacterGenerater.charaGenerate(game, dungeon, characterList.get(randomSelectArray(parameter.list)!)!));
+        }
+        return Promise.all(charaPromiseList);
+    }
+    static async charaGenerate(game: Game, dungeon:Dungeon, enemyInfoPath: string) {
+        const charaInfo:CharacterInfo = json5.parse(await new Promise((resolve) => {
+            const request = new XMLHttpRequest();
+            request.open("GET", enemyInfoPath);
+            request.addEventListener("loadend", () => {
+                resolve(request.responseText);
+            })
+            request.send();
+        }) as string
+        ) as CharacterInfo;
+        const chara = new Character(game, charaInfo.baseHp + dungeon.level * 3, randomSelectArray(dungeon.roomList).pos.clone(), 0, charaInfo.color);
+        chara.ai = AI.generate(game, chara, charaInfo.defaultAI);
+        return chara;
+    }
+}
+
+
+export class DungeonGenerater {
+    static generate(game: Game, parameter: MysteryDungeonParameter) {
         const grid = range(parameter.cellNumX).map((e, x) => range(parameter.cellNumY).map((e, y) =>
             new Cell(
                 x,
@@ -45,10 +95,10 @@ export class DungeonGenerator {
                 parameter.cellSize,
                 wall,
             )));
-        const dungeon = new Dungeon(game, grid);
-        const roomList = DungeonGenerator.generateRoom(parameter);
-        const connectRoomList = DungeonGenerator.connectRoomList(parameter, roomList);
-        
+        const dungeon = new Dungeon(game, grid, parameter.level);
+        const roomList = DungeonGenerater.generateRoom(parameter);
+        const connectRoomList = DungeonGenerater.connectRoomList(parameter, roomList);
+
         dungeon.setRoom(roomList);
         dungeon.setPathWay(connectRoomList);
         dungeon.setGrid();
@@ -120,13 +170,13 @@ export class DungeonGenerator {
     private static createRoomList(parameter: MysteryDungeonParameter): Room[] {
         let list: Room[] = [];
         for (let count of range(parameter.room.volume)) {
-            list.push(DungeonGenerator.createRoom(parameter));
+            list.push(DungeonGenerater.createRoom(parameter));
         }
         return list;
     }
     private static connectRoomList(parameter: MysteryDungeonParameter, roomList: Room[]): ConnectRoomList[] {
-        const nearAllPathWay = DungeonGenerator.nearConnectRoom(parameter, roomList);
-        const minimumPathWay = DungeonGenerator.minimumSpanningList(nearAllPathWay);
+        const nearAllPathWay = DungeonGenerater.nearConnectRoom(parameter, roomList);
+        const minimumPathWay = DungeonGenerater.minimumSpanningList(nearAllPathWay);
         return minimumPathWay;
     }
     //近い部屋同士をつなげる
@@ -249,7 +299,7 @@ export class DungeonGenerator {
                 return this.getTop() == tree.getTop();
             }
         }
-        const roomRange = (pair:{room1: Room, room2: Room}) => {
+        const roomRange = (pair: { room1: Room, room2: Room }) => {
             return Math.hypot(pair.room1.centerX - pair.room2.centerX, pair.room1.centerY - pair.room2.centerY);
         }
         const sortedConnectRoomList = connectRoomList.slice().sort((a, b) => roomRange(a) - roomRange(b));
@@ -260,7 +310,7 @@ export class DungeonGenerator {
             edgeDisjointSet.set(connectRoom.room2, new DisjointSet(connectRoom.room2));
         }
 
-        const minimunSpanningEdgeList: {room1:Room, room2:Room}[] = [];
+        const minimunSpanningEdgeList: { room1: Room, room2: Room }[] = [];
         for (let connectRoom of sortedConnectRoomList) {
             const node1 = edgeDisjointSet.get(connectRoom.room1);
             const node2 = edgeDisjointSet.get(connectRoom.room2);

@@ -13,10 +13,10 @@
     "@types/json5": "^0.0.29",
     "@types/pixi.js": "^4.4.4",
     "copy-webpack-plugin": "^4.0.1",
-    "ts-loader": "^2.1.0",
+    "ts-loader": "^2.2.2",
     "typescript": "^2.4.1",
-    "webpack": "^3.0.0",
-    "webpack-dev-server": "^2.4.2"
+    "webpack": "^3.2.0",
+    "webpack-dev-server": "^2.5.1"
   },
   "scripts": {
     "start": "webpack-dev-server --host=0.0.0.0 --inline",
