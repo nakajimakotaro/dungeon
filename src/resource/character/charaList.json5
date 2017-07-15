@@ -1,0 +1,4 @@
+{
+    enemy: "resource/character/enemy.json5",
+    player: "resource/character/player.json5",
+}

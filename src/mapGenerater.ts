@@ -20,7 +20,7 @@ export type MapParameter = {
     character: {
         list: string[],
         volume: number,
-    }
+    }[]
 };
 
 export class MapGenerater {

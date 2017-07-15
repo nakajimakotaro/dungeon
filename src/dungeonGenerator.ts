@@ -58,19 +58,38 @@ type CharacterInfo = {
     defaultAI: AIParameter;
 }
 
-const characterList: Map<string, string> = new Map();
-characterList.set("enemy", "resource/character/enemy.json5");
+
+let characterList: Map<string, string> = new Map();
+const CharacterListLoadPromise = (async () => {
+    const charaListJson = json5.parse(await new Promise((resolve) => {
+        const require = new XMLHttpRequest();
+        require.open("GET", "resource/character/charaList.json5");
+        require.addEventListener("loadend", () => {
+            resolve(require.responseText);
+        })
+        require.send();
+    }) as string);
+
+    for (let charaKey of Object.keys(charaListJson)) {
+        const charaUrl = charaListJson[charaKey];
+        characterList.set(charaKey, charaUrl);
+    }
+    return Promise.resolve();
+})();
 
 export class CharacterGenerater {
-    static generate(game: Game, dungeon:Dungeon, parameter: GenerateCharacterParameter) {
-        const charaPromiseList:Promise<Character>[] = [];
-        for (let count of range(parameter.volume)) {
-            charaPromiseList.push(CharacterGenerater.charaGenerate(game, dungeon, characterList.get(randomSelectArray(parameter.list)!)!));
+    static async generate(game: Game, dungeon: Dungeon, parameterList: GenerateCharacterParameter[]) {
+        await CharacterListLoadPromise;
+        const charaPromiseList: Promise<Character>[] = [];
+        for (let parameter of parameterList) {
+            for (let count of range(parameter.volume)) {
+                charaPromiseList.push(CharacterGenerater.charaGenerate(game, dungeon, characterList.get(randomSelectArray(parameter.list)!)!));
+            }
         }
         return Promise.all(charaPromiseList);
     }
-    static async charaGenerate(game: Game, dungeon:Dungeon, enemyInfoPath: string) {
-        const charaInfo:CharacterInfo = json5.parse(await new Promise((resolve) => {
+    static async charaGenerate(game: Game, dungeon: Dungeon, enemyInfoPath: string) {
+        const charaInfo: CharacterInfo = json5.parse(await new Promise((resolve) => {
             const request = new XMLHttpRequest();
             request.open("GET", enemyInfoPath);
             request.addEventListener("loadend", () => {

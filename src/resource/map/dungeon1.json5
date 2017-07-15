@@ -13,8 +13,14 @@
         cellNumX: 60,
         cellNumY: 60,
     },
-    character:{
+    character:[
+        {
             list: ["enemy"],
             volume: 10,
         },
+        {
+            list: ["player"],
+            volume: 1,
+        },
+    ]
 }
