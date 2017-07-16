@@ -1,10 +1,7 @@
 import "pixi.js";
 import { Game } from "./game";
-import { Room } from "./room";
 import { Character } from "./character";
 import { Cell } from "./cell";
-import { PathWay } from "./pathway";
-import { Wall } from "./wall";
 
 export class GameMap {
     charaList:Character[] = [];

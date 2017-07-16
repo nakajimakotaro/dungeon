@@ -1,38 +1,14 @@
 import "pixi.js";
-import json5 = require("json5");
-import { Triangle, Circle, Point } from "./shape";
-import { Room } from "./room";
-import { GameMap } from "./gameMap";
-import { Dungeon } from "./dungeon";
-import { Character } from "./character";
-import { AI, AIParameter } from "./AI";
-import { PathWay } from "./pathway";
-import { Cell } from "./cell";
-import { Game } from "./game";
-import { wall } from "./wall";
+import { Util} from "./../util";
+import { Triangle, Circle, Point } from "../shape";
+import { Room } from "../room";
+import { Dungeon } from "../dungeon";
+import { Cell } from "../cell";
+import { Game } from "../game";
+import { wall } from "../wall";
 
-function rangeRandom(min: number, max: number): number {
-    return Math.random() * (max - min) + min;
-}
-function rangeRandomInt(min: number, max: number): number {
-    return Math.floor(rangeRandom(min, max));
-}
-function range(range: number) {
-    return new Array(range).fill(0).map((e, i) => i);
-}
-function randomSelectArray<T>(array: Array<T>) {
-    return array[rangeRandomInt(0, array.length)];
-}
-function randomSelect<T, K>(map: Map<T, K>) {
-    return map.get(map.keys[rangeRandomInt(0, map.size)]);
-}
-export type RoomGenerateParameter = {
-    minWidth: number,
-    minHeight: number,
-    maxWidth: number,
-    maxHeight: number,
-    volume: number, //作成する数
-}
+
+//mapを自動生成するパラメーター
 export type MysteryDungeonParameter = {
     kind: "MysteryDungeon";
     level: number,
@@ -41,73 +17,23 @@ export type MysteryDungeonParameter = {
     cellNumX: number;
     cellNumY: number;
 }
+//mapのRoomを自動生成するパラメーター
+type RoomGenerateParameter = {
+    minWidth: number,
+    minHeight: number,
+    maxWidth: number,
+    maxHeight: number,
+    volume: number, //作成する数
+}
+
 type ConnectRoomList = {
     room1: Room,
     room2: Room,
 }
 
-type GenerateCharacterParameter = {
-    list: string[],
-    volume: number,
-}
-
-type CharacterInfo = {
-    name: string;
-    color: number;
-    baseHp: number;
-    defaultAI: AIParameter;
-}
-
-
-let characterList: Map<string, string> = new Map();
-const CharacterListLoadPromise = (async () => {
-    const charaListJson = json5.parse(await new Promise((resolve) => {
-        const require = new XMLHttpRequest();
-        require.open("GET", "resource/character/charaList.json5");
-        require.addEventListener("loadend", () => {
-            resolve(require.responseText);
-        })
-        require.send();
-    }) as string);
-
-    for (let charaKey of Object.keys(charaListJson)) {
-        const charaUrl = charaListJson[charaKey];
-        characterList.set(charaKey, charaUrl);
-    }
-    return Promise.resolve();
-})();
-
-export class CharacterGenerater {
-    static async generate(game: Game, dungeon: Dungeon, parameterList: GenerateCharacterParameter[]) {
-        await CharacterListLoadPromise;
-        const charaPromiseList: Promise<Character>[] = [];
-        for (let parameter of parameterList) {
-            for (let count of range(parameter.volume)) {
-                charaPromiseList.push(CharacterGenerater.charaGenerate(game, dungeon, characterList.get(randomSelectArray(parameter.list)!)!));
-            }
-        }
-        return Promise.all(charaPromiseList);
-    }
-    static async charaGenerate(game: Game, dungeon: Dungeon, enemyInfoPath: string) {
-        const charaInfo: CharacterInfo = json5.parse(await new Promise((resolve) => {
-            const request = new XMLHttpRequest();
-            request.open("GET", enemyInfoPath);
-            request.addEventListener("loadend", () => {
-                resolve(request.responseText);
-            })
-            request.send();
-        }) as string
-        ) as CharacterInfo;
-        const chara = new Character(game, charaInfo.baseHp + dungeon.level * 3, randomSelectArray(dungeon.roomList).pos.clone(), 0, charaInfo.color);
-        chara.ai = AI.generate(game, chara, charaInfo.defaultAI);
-        return chara;
-    }
-}
-
-
 export class DungeonGenerater {
     static generate(game: Game, parameter: MysteryDungeonParameter) {
-        const grid = range(parameter.cellNumX).map((e, x) => range(parameter.cellNumY).map((e, y) =>
+        const grid = Util.range(parameter.cellNumX).map((e, x) => Util.range(parameter.cellNumY).map((e, y) =>
             new Cell(
                 x,
                 y,
@@ -166,18 +92,18 @@ export class DungeonGenerater {
                     let rect = collitionRect(a, b);
                     if (rect.h > 0 && rect.w > 0) {
                         collisionFlag = true;
-                        a.startX = rangeRandomInt(0, parameter.cellNumX - a.width);
-                        a.startY = rangeRandomInt(0, parameter.cellNumY - a.height);
+                        a.startX = Util.rangeRandomInt(0, parameter.cellNumX - a.width);
+                        a.startY = Util.rangeRandomInt(0, parameter.cellNumY - a.height);
                     }
                 }
             }
         } while (collisionFlag);
     }
     private static createRoom(parameter: MysteryDungeonParameter): Room {
-        const width = rangeRandomInt(parameter.room.minWidth, parameter.room.maxWidth);
-        const height = rangeRandomInt(parameter.room.minHeight, parameter.room.maxHeight);
-        const startX = rangeRandomInt(0, parameter.cellNumX - width);
-        const startY = rangeRandomInt(0, parameter.cellNumY - height);
+        const width = Util.rangeRandomInt(parameter.room.minWidth, parameter.room.maxWidth);
+        const height = Util.rangeRandomInt(parameter.room.minHeight, parameter.room.maxHeight);
+        const startX = Util.rangeRandomInt(0, parameter.cellNumX - width);
+        const startY = Util.rangeRandomInt(0, parameter.cellNumY - height);
         return new Room(
             startX,
             startY,
@@ -188,7 +114,7 @@ export class DungeonGenerater {
 
     private static createRoomList(parameter: MysteryDungeonParameter): Room[] {
         let list: Room[] = [];
-        for (let count of range(parameter.room.volume)) {
+        for (let count of Util.range(parameter.room.volume)) {
             list.push(DungeonGenerater.createRoom(parameter));
         }
         return list;

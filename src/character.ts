@@ -1,12 +1,8 @@
 import { Game } from "./game";
-import { Cell } from "./cell";
 import { Wall } from "./wall";
 import { Point } from "./shape";
-import { AI } from "./AI";
+import { AI } from "./AI/AI";
 
-export type CharacterInfo = {
-
-}
 export class Character {
     public ai: AI;
     constructor(public game: Game, public hp: number, public pos: Point, public angle: number, public color: number) {

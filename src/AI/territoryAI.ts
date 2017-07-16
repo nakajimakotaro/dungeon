@@ -1,7 +1,7 @@
 import {AI} from "./AI";
-import { Point } from "./shape";
-import { Game } from "./game";
-import { Character } from "./character";
+import { Point } from "../shape";
+import { Game } from "../game";
+import { Character } from "../character";
 
 function rangeRandom(min: number, max: number): number {
     return Math.random() * (max - min) + min;

@@ -1,11 +1,7 @@
 import "pixi.js";
 import Stats = require("stats.js");
-import { Triangle, Circle, Point } from "./shape";
-import { Room } from "./room";
-import {MapGenerater} from "./MapGenerater";
+import {LevelGenerater} from "./levelGenerater/MapGenerater";
 import { GameMap } from "./gameMap";
-import { AI} from "./AI";
-import { Character} from "./character";
 import { InputManager } from "./inputManager";
 
 export class Game{
@@ -25,7 +21,7 @@ export class Game{
         this.inputManager = new InputManager(this);
     }
     async load(mapPath){
-        this.map = await MapGenerater.generate(this, mapPath);
+        this.map = await LevelGenerater.generate(this, mapPath);
     }
     start() {
         setInterval(() => this.loop(), this.nextFrameTime());

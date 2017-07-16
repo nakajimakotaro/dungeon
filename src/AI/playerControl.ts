@@ -1,6 +1,6 @@
-import { Game } from "./game";
-import { Character } from "./character";
-import { Point } from "./shape";
+import { Game } from "../game";
+import { Character } from "../character";
+import { Point } from "../shape";
 import {AI, AIParameter} from "./AI";
 export type PlayerControlParameter = {
     name:string,

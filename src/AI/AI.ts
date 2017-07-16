@@ -1,6 +1,6 @@
-import { Game } from "./game";
-import { Character } from "./character";
-import { Point } from "./shape";
+import { Game } from "../game";
+import { Character } from "../character";
+import { Point } from "../shape";
 import {TerritoryAI, TerritoryAIParameter} from "./territoryAI";
 import {PlayerControl, PlayerControlParameter} from "./playerControl";
 
