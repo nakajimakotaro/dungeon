@@ -2,6 +2,7 @@
     name: "enemy",
     color: 0xff00ff,
     baseHp: 10,
+    group: "enemy",
     defaultAI: {
         name: "TerritoryAI",
         range: 5,

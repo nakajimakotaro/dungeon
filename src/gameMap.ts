@@ -4,7 +4,7 @@ import { Character } from "./character";
 import { Cell } from "./cell";
 
 export class GameMap {
-    charaList:Character[] = [];
+    charaList:Map<Character, Character> = new Map();
     get gridSizeX(){
         return this.grid.length;
     }
@@ -33,5 +33,8 @@ export class GameMap {
         return x >= 0 && y >= 0 && x < this.grid.length && y < this.grid[0].length;
     }
     addChara(chara:Character){
+        this.charaList.set(chara, chara);
+    }
+    removeChara(chara:Character){
     }
 }

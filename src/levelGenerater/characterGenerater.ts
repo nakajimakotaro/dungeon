@@ -15,6 +15,7 @@ type CharacterInfo = {
     name: string;
     color: number;
     baseHp: number;
+    group: string;
     defaultAI: AIParameter;
 }
 let characterList: Map<string, string> = new Map();
@@ -37,11 +38,16 @@ export class CharacterGenerater {
                 charaPromiseList.push(CharacterGenerater.charaGenerate(game, dungeon, characterList.get(Util.randomSelectArray(parameter.list)!)!));
             }
         }
-        return Promise.all(charaPromiseList);
+
+        const charaMap: Map<Character, Character> = new Map();
+        for(let chara of await Promise.all(charaPromiseList)){
+            charaMap.set(chara, chara);
+        }
+        return charaMap;
     }
     static async charaGenerate(game: Game, dungeon: Dungeon, enemyInfoPath: string) {
         const charaInfo: CharacterInfo = await Util.getJson5(enemyInfoPath) as CharacterInfo;
-        const chara = new Character(game, charaInfo.baseHp + dungeon.level * 3, Util.randomSelectArray(dungeon.roomList).pos.clone(), 0, charaInfo.color);
+        const chara = new Character(game, charaInfo.baseHp + dungeon.level * 3, Util.randomSelectArray(dungeon.roomList).pos.clone(), 0, charaInfo.color, charaInfo.group);
         chara.ai = AI.generate(game, chara, charaInfo.defaultAI);
         return chara;
     }

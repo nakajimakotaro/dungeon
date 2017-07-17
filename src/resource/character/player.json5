@@ -2,6 +2,7 @@
     name: "player",
     color: 0x00ffff,
     baseHp: 10,
+    group: "player",
     defaultAI: {
         name: "PlayerControl",
     }

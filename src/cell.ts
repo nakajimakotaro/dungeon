@@ -1,4 +1,5 @@
 import {Room} from "./room";
+import {Cause} from "./cause";
 import {PathWay} from "./pathway";
 import {Wall} from "./wall";
 import {Item} from "./item";
@@ -18,5 +19,11 @@ export class Cell {
         render
             .beginFill(this.color)
             .drawRect(this.x * this.size, this.y * this.size, this.size, this.size);
+    }
+    fireCause(cause:Cause){
+        this.items.forEach(a=>a.fireCause(cause));
+        if(this.chara){
+            this.chara.fireCause(cause);
+        }
     }
 }

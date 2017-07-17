@@ -1,20 +1,29 @@
 import { Game } from "./game";
+import { Cause } from "./cause";
 import { Wall } from "./wall";
 import { Point } from "./shape";
 import { AI } from "./AI/AI";
 
 export class Character {
     public ai: AI;
-    constructor(public game: Game, public hp: number, public pos: Point, public angle: number, public color: number) {
+    constructor(public game: Game, public hp: number, public pos: Point, public angle: number, public color: number, public group: string) {
     }
     update() {
         if (this.ai && this.pos && this.angle != undefined) {
             this.ai.update();
         }
+        if (this.hp < 0) {
+            this.die();
+        }
     }
     addMap(x, y, angle) {
         this.pos = new Point(x, y);
         this.angle = angle;
+    }
+    fireCause(cause: Cause) {
+        this.hp -= cause.damege;
+        this.hp += cause.damege;
+        console.log(this.hp);
     }
     draw(render: PIXI.Graphics) {
         render
@@ -79,5 +88,15 @@ export class Character {
             throw new Error("Error");
         }
         return normalizeAngle;
+    }
+    frontOf() {
+        const x = this.pos.x + Math.round(Math.cos(this.angle));
+        const y = this.pos.y + Math.round(Math.sin(this.angle)) * -1;
+        if (!this.game.map.isGridRange(x, y)) {
+            return null;
+        }
+        return this.game.map.grid[x][y];
+    }
+    die() {
     }
 }
