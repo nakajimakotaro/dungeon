@@ -1,6 +1,6 @@
 import "pixi.js";
 import Stats = require("stats.js");
-import {LevelGenerater} from "./levelGenerater/MapGenerater";
+import {MapGenerater} from "./levelGenerater/mapGenerater";
 import { GameMap } from "./gameMap";
 import { InputManager } from "./inputManager";
 
@@ -8,7 +8,7 @@ export class Game{
     stats:Stats;
     pixi: PIXI.Application;
     render: PIXI.Graphics;
-    map: GameMap;
+    gameMap: GameMap;
     inputManager:InputManager;
     frame = 0;
     constructor() {
@@ -20,8 +20,8 @@ export class Game{
         this.pixi.stage.addChild(this.render);
         this.inputManager = new InputManager(this);
     }
-    async load(mapPath){
-        this.map = await LevelGenerater.generate(this, mapPath);
+    async load(levelPath){
+        this.gameMap = await MapGenerater.generate(this, levelPath);
     }
     start() {
         setInterval(() => this.loop(), this.nextFrameTime());
@@ -29,11 +29,11 @@ export class Game{
     loop() {
         this.stats.begin();
         //update
-        this.map.update();
+        this.gameMap.update();
 
         //draw
         this.render.clear();
-        this.map.draw(this.render);
+        this.gameMap.draw(this.render);
         this.frame++;
         this.stats.end();
     }

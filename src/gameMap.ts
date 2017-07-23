@@ -5,6 +5,7 @@ import { Cell } from "./cell";
 
 export class GameMap {
     charaList:Map<Character, Character> = new Map();
+    removeQueqeList:Character[] = [];
     get gridSizeX(){
         return this.grid.length;
     }
@@ -26,7 +27,10 @@ export class GameMap {
         this.charaList.forEach(e=>e.draw(render));
     }
     update(){
-
+        for(let chara of this.removeQueqeList){
+            this.charaList.delete(chara);
+        }
+        this.removeQueqeList = [];
         this.charaList.forEach(e=>e.update());
     }
     isGridRange(x:number, y:number){
@@ -36,5 +40,6 @@ export class GameMap {
         this.charaList.set(chara, chara);
     }
     removeChara(chara:Character){
+        this.removeQueqeList.push(chara);
     }
 }

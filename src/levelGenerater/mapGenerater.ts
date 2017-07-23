@@ -21,10 +21,10 @@ export type LevelParameter = {
     character: CharacterGenerateParameter[],
 };
 
-export class LevelGenerater {
+export class MapGenerater {
     static async generate(game: Game, parameterPath: string){
         const levelParameter = await Util.getJson5(parameterPath) as LevelParameter;
-        const dungeon = LevelGenerater.map(game, levelParameter);
+        const dungeon = MapGenerater.map(game, levelParameter);
         dungeon.charaList = await CharacterGenerater.generate(game, dungeon, levelParameter.character);
         return dungeon;
     }

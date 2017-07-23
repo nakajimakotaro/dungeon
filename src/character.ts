@@ -1,4 +1,5 @@
 import { Game } from "./game";
+import { Dungeon } from "./dungeon";
 import { Cause } from "./cause";
 import { Wall } from "./wall";
 import { Point } from "./shape";
@@ -6,7 +7,8 @@ import { AI } from "./AI/AI";
 
 export class Character {
     public ai: AI;
-    constructor(public game: Game, public hp: number, public pos: Point, public angle: number, public color: number, public group: string) {
+    constructor(public game: Game, dungeon:Dungeon, public hp: number, public pos: Point, public angle: number, public color: number, public group: string) {
+        dungeon.grid[this.pos.x][this.pos.y].chara = this;
     }
     update() {
         if (this.ai && this.pos && this.angle != undefined) {
@@ -22,22 +24,21 @@ export class Character {
     }
     fireCause(cause: Cause) {
         this.hp -= cause.damege;
-        this.hp += cause.damege;
-        console.log(this.hp);
+        this.hp += cause.heal;
     }
     draw(render: PIXI.Graphics) {
         render
             .beginFill(this.color)
-            .drawRect(this.pos.x * this.game.map.cellSize, this.pos.y * this.game.map.cellSize, this.game.map.cellSize, this.game.map.cellSize);
+            .drawRect(this.pos.x * this.game.gameMap.cellSize, this.pos.y * this.game.gameMap.cellSize, this.game.gameMap.cellSize, this.game.gameMap.cellSize);
     }
     canMoveTo(x: number, y: number): boolean {
-        if (!this.game.map.isGridRange(x, y)) {
+        if (!this.game.gameMap.isGridRange(x, y)) {
             return false;
         }
-        if (this.game.map.grid[x][y].belong instanceof Wall) {
+        if (this.game.gameMap.grid[x][y].belong instanceof Wall) {
             return false;
         }
-        if (this.game.map.grid[x][y].chara != null) {
+        if (this.game.gameMap.grid[x][y].chara != null) {
             return false;
         }
         return true;
@@ -48,10 +49,10 @@ export class Character {
         if (!this.canMoveTo(this.pos.x + x, this.pos.y + y)) {
             return false;
         }
-        this.game.map.grid[this.pos.x][this.pos.y].chara = null;
+        this.game.gameMap.grid[this.pos.x][this.pos.y].chara = null;
         this.pos.x += x;
         this.pos.y += y;
-        this.game.map.grid[this.pos.x][this.pos.y].chara = this;
+        this.game.gameMap.grid[this.pos.x][this.pos.y].chara = this;
         return true;
     }
     globalAngle(angle: number = 0) {
@@ -92,11 +93,13 @@ export class Character {
     frontOf() {
         const x = this.pos.x + Math.round(Math.cos(this.angle));
         const y = this.pos.y + Math.round(Math.sin(this.angle)) * -1;
-        if (!this.game.map.isGridRange(x, y)) {
+        if (!this.game.gameMap.isGridRange(x, y)) {
             return null;
         }
-        return this.game.map.grid[x][y];
+        return this.game.gameMap.grid[x][y];
     }
     die() {
+        this.game.gameMap.removeChara(this);
+        this.game.gameMap.grid[this.pos.x][this.pos.y].chara = null;
     }
 }

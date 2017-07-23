@@ -1,5 +1,6 @@
 import { Game } from "../game";
 import { Dungeon } from "../dungeon";
+import { Point } from "../shape";
 import { AI, AIParameter } from "../AI/AI";
 import { Character } from "../character";
 import { Util } from "../util";
@@ -47,7 +48,13 @@ export class CharacterGenerater {
     }
     static async charaGenerate(game: Game, dungeon: Dungeon, enemyInfoPath: string) {
         const charaInfo: CharacterInfo = await Util.getJson5(enemyInfoPath) as CharacterInfo;
-        const chara = new Character(game, charaInfo.baseHp + dungeon.level * 3, Util.randomSelectArray(dungeon.roomList).pos.clone(), 0, charaInfo.color, charaInfo.group);
+        let charaPos:Point = new Point();
+        do{
+            const selectRoom = Util.randomSelectArray(dungeon.roomList);
+            charaPos.x = Util.rangeRandomInt(selectRoom.startX, selectRoom.startX + selectRoom.width);
+            charaPos.y = Util.rangeRandomInt(selectRoom.startY, selectRoom.startY + selectRoom.height);
+        }while(dungeon.grid[charaPos.x][charaPos.y].chara != null);
+        const chara = new Character(game, dungeon, charaInfo.baseHp + dungeon.level * 3, charaPos, 0, charaInfo.color, charaInfo.group);
         chara.ai = AI.generate(game, chara, charaInfo.defaultAI);
         return chara;
     }
