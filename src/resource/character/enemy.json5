@@ -5,6 +5,6 @@
     group: "enemy",
     defaultAI: {
         name: "TerritoryAI",
-        range: 1,
+        range: 5,
     }
 }

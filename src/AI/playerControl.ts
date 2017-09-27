@@ -1,4 +1,6 @@
-import { Game } from "../game"; import { Character } from "../character";
+import { Game } from "../game"; 
+import "pixi.js";
+import { Character } from "../character";
 import { Point } from "../shape";
 import { AI, AIParameter } from "./AI";
 export type PlayerControlParameter = {
@@ -11,11 +13,18 @@ export class PlayerControl implements AI {
         return new PlayerControl(game, chara);
     }
     update() {
-        if (this.game.frame % 10 != 0) {
-            return;
-        }
+    }
+    turnUpdateCount = 0;
+    isMove = false;
+    turnStart(){
+        this.isMove = false;
+        this.turnUpdateCount = 0;
+    }
+    turnUpdate(){
         this.inputDirection();
-        if (this.game.inputManager.getKeySomeStatus("awsd")) {
+        if (this.isMove == false && this.game.inputManager.getKeySomeStatus("awsd")) {
+            this.isMove = true;
+            this.turnUpdateCount = 0;
             const frontCell = this.chara.frontOf();
             if (frontCell == null) {
                 return;
@@ -27,8 +36,11 @@ export class PlayerControl implements AI {
                 frontCell.fireCause({ pos: new Point(frontCell.x, frontCell.y), damege: 5, heal: 0, special: "" });
             }
         }
-    }
-    turnUpdate() {
+
+        if(this.isMove && this.turnUpdateCount == 10){
+            this.game.gameMap.turnManager.turnNext();
+        }
+        this.turnUpdateCount++;
     }
     walk() {
         if (this.chara.frontOf()) {

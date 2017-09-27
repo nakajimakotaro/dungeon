@@ -7,7 +7,9 @@ import {PlayerControl, PlayerControlParameter} from "./playerControl";
 export type AIParameter = TerritoryAIParameter|PlayerControlParameter;
 
 export abstract class AI {
-    abstract update();
+    abstract update();  //毎フレーム呼ばれる
+    abstract turnUpdate();  //自分のターンになると呼ばれる trueを返すと自分のターンが終わる
+    abstract turnStart();  //自分のターンになると呼ばれる trueを返すと自分のターンが終わる
     static AIList = {
         TerritoryAI: TerritoryAI.generate,
         PlayerControl: PlayerControl.generate,

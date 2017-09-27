@@ -1,15 +1,15 @@
 import "pixi.js";
 import Stats = require("stats.js");
-import {MapGenerater} from "./levelGenerater/mapGenerater";
+import { MapGenerater } from "./levelGenerater/mapGenerater";
 import { GameMap } from "./gameMap";
 import { InputManager } from "./inputManager";
 
-export class Game{
-    stats:Stats;
+export class Game {
+    stats: Stats;
     pixi: PIXI.Application;
     render: PIXI.Graphics;
     gameMap: GameMap;
-    inputManager:InputManager;
+    inputManager: InputManager;
     frame = 0;
     constructor() {
         this.stats = new Stats();
@@ -20,7 +20,7 @@ export class Game{
         this.pixi.stage.addChild(this.render);
         this.inputManager = new InputManager(this);
     }
-    async load(levelPath){
+    async load(levelPath) {
         this.gameMap = await MapGenerater.generate(this, levelPath);
     }
     start() {

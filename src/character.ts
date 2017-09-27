@@ -4,16 +4,32 @@ import { Cause } from "./cause";
 import { Wall } from "./wall";
 import { Point } from "./shape";
 import { AI } from "./AI/AI";
+import { NoneAI } from "./AI/NoneAI";
+import { TurnManager, TurnInterface } from "./turnManager";
+import { Animation, AnimationManager } from "./animation/animation";
 
-export class Character {
+export class Character implements TurnInterface {
     public ai: AI;
-    constructor(public game: Game, dungeon:Dungeon, public hp: number, public pos: Point, public angle: number, public color: number, public group: string) {
+    public turnWaitTime: number = 10;
+    public nextTurnTime: number = 0;
+    animationManager: AnimationManager = new AnimationManager;
+    public 
+    public turnStart() {
+        this.ai.turnStart();
+    }
+    public turnUpdate() {
+        this.ai.turnUpdate();
+    }
+    constructor(public game: Game, dungeon: Dungeon, public hp: number, public pos: Point, public angle: number, public color: number, public group: string) {
         dungeon.grid[this.pos.x][this.pos.y].chara = this;
+        dungeon.turnManager.addTurnListener(this);
+        this.ai = new NoneAI(game, this);
     }
     update() {
         if (this.ai && this.pos && this.angle != undefined) {
             this.ai.update();
         }
+        this.animationManager.update();
         if (this.hp < 0) {
             this.die();
         }

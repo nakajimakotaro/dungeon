@@ -16,7 +16,7 @@
     character:[
         {
             list: ["enemy"],
-            volume: 10,
+            volume: 5,
         },
         {
             list: ["player"],

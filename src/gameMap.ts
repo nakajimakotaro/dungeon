@@ -2,8 +2,10 @@ import "pixi.js";
 import { Game } from "./game";
 import { Character } from "./character";
 import { Cell } from "./cell";
+import { TurnManager } from "./turnManager";
 
 export class GameMap {
+    turnManager: TurnManager;
     charaList:Map<Character, Character> = new Map();
     removeQueqeList:Character[] = [];
     get gridSizeX(){
@@ -17,6 +19,7 @@ export class GameMap {
     }
 
     constructor(public game:Game, public grid:Cell[][]) {
+        this.turnManager = new TurnManager();
     }
     draw(render: PIXI.Graphics) {
         for (let yGrid of this.grid) {
@@ -32,6 +35,8 @@ export class GameMap {
         }
         this.removeQueqeList = [];
         this.charaList.forEach(e=>e.update());
+
+        this.turnManager.update();
     }
     isGridRange(x:number, y:number){
         return x >= 0 && y >= 0 && x < this.grid.length && y < this.grid[0].length;

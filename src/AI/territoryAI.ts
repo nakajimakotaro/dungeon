@@ -33,9 +33,12 @@ export class TerritoryAI implements AI {
         return new TerritoryAI(game, chara, parameter.range, parameter.pin);
     }
     update() {
-        if (this.game.frame % 30 == 0) {
-            this.walk();
-        }
+    }
+    turnStart(){
+        this.walk();
+        this.game.gameMap.turnManager.turnNext();
+    }
+    turnUpdate(){
     }
     isInTerritory(x: number, y: number) {
         return Math.hypot(x - this.territoryPin.x, y - this.territoryPin.y) < this.territoryRange;
